@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+
+    <script src="./dist/index.js" type="text/javascript"></script>
+  </head>
+  <body>
+    <div id="chart" style="width: 500px; height: 500px;"></div>
+
+    <script type="text/javascript">
+      var pod = new ChartwerkScatterPod(
+        document.getElementById('chart'),
+        [
+          {
+            target: 'test1',
+            datapoints: [
+              [100, 0],
+              [200, 150],
+              [100, 160],
+              [150, 170],
+              [150, 180],
+              [150, 250]
+            ],
+            color: 'red',
+            renderType: 'line'
+          },
+          {
+            target: 'test2',
+            datapoints: [
+              [200, 50],
+              [175, 60],
+              [150, 70]
+            ],
+            color: 'green'
+          }
+        ],
+        {
+          axis: {
+            x: {
+              format: 'numeric',
+              range: [0, 300]
+            },
+            y: {
+              invert: true,
+              range: [0, 250]
+            }
+          },
+          zoom: {
+            orientation: 'both',
+            type: 'brush'
+          },
+          crosshair: {
+            orientation: 'both',
+            color: 'gray'
+          },
+          labelFormat: {
+            yAxis: 'y',
+            xAxis: 'x'
+          }
+        }
+      );
+      pod.render();
+    </script>
+  </body>
+</html>
