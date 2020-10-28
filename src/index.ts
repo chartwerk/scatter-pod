@@ -6,13 +6,14 @@ import * as _ from 'lodash';
 
 // TODO: use pod state with defaults
 const DEFAULT_POINT_SIZE = 4;
+const POINT_HIGHLIGHT_DIAMETER = 4;
+
 export class ChartwerkScatterPod extends ChartwerkBase<ScatterData, ScatterOptions> {
   _metricsContainer: any;
   _voronoiDiagram: any;
   _voronoiRadius: number;
 
   constructor(el: HTMLElement, _series: ScatterData[] = [], _options: ScatterOptions = {}) {
-    // @ts-ignore
     super(d3, el, _series, _options);
   }
 
@@ -112,6 +113,7 @@ export class ChartwerkScatterPod extends ChartwerkBase<ScatterData, ScatterOptio
     } else {
       this._crosshair.select('.crosshair-circle')
         .style('display', null)
+        .attr('r', this._series[d[2]].pointSize + POINT_HIGHLIGHT_DIAMETER || DEFAULT_POINT_SIZE + POINT_HIGHLIGHT_DIAMETER)
         .attr('cx', this.xScale(d[1]))
         .attr('cy', this.yScale(d[0]))
         .attr('fill', this.getSerieColor(d[2]));
