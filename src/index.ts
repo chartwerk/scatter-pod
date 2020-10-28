@@ -12,7 +12,6 @@ export class ChartwerkScatterPod extends ChartwerkBase<ScatterData, ScatterOptio
   _voronoiRadius: number;
 
   constructor(el: HTMLElement, _series: ScatterData[] = [], _options: ScatterOptions = {}) {
-    // @ts-ignore
     super(d3, el, _series, _options);
   }
 
