@@ -1,4 +1,4 @@
-import { TimeSerie, Options } from '@chartwerk/base';
+import { TimeSerie, Options } from '@chartwerk/core';
 declare type ScatterDataParams = {
     renderType: RenderType;
     pointSize: number;

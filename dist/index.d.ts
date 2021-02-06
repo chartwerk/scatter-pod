@@ -1,11 +1,11 @@
-import { ChartwerkBase, TickOrientation, TimeFormat } from '@chartwerk/base';
+import { ChartwerkPod, TickOrientation, TimeFormat } from '@chartwerk/core';
 import { ScatterData, ScatterOptions, RenderType } from './types';
-export declare class ChartwerkScatterPod extends ChartwerkBase<ScatterData, ScatterOptions> {
+export declare class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOptions> {
     _metricsContainer: any;
     _voronoiDiagram: any;
     _voronoiRadius: number;
     constructor(el: HTMLElement, _series?: ScatterData[], _options?: ScatterOptions);
-    _renderMetrics(): void;
+    renderMetrics(): void;
     _renderMetric(datapoints: number[][], metricOptions: {
         color: string;
         target: string;
@@ -57,6 +57,9 @@ export declare const VueChartwerkScatterPodObject: {
             mouseMove(evt: any): void;
             mouseOut(): void;
             onLegendClick(idx: any): void;
+            panningEnd(range: any): void;
+            panningZoom(range: any): void;
+            contextMenu(evt: any): void;
         };
     }[];
     methods: {
