@@ -1,4 +1,4 @@
-import { ChartwerkBase, VueChartwerkBaseMixin, TickOrientation, TimeFormat } from '@chartwerk/base';
+import { ChartwerkPod, VueChartwerkPodMixin, TickOrientation, TimeFormat } from '@chartwerk/core';
 import { ScatterData, ScatterOptions, RenderType } from './types';
 
 import * as d3 from 'd3';
@@ -8,7 +8,7 @@ import * as _ from 'lodash';
 const DEFAULT_POINT_SIZE = 4;
 const POINT_HIGHLIGHT_DIAMETER = 4;
 
-export class ChartwerkScatterPod extends ChartwerkBase<ScatterData, ScatterOptions> {
+export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOptions> {
   _metricsContainer: any;
   _voronoiDiagram: any;
   _voronoiRadius: number;
@@ -17,13 +17,13 @@ export class ChartwerkScatterPod extends ChartwerkBase<ScatterData, ScatterOptio
     super(d3, el, _series, _options);
   }
 
-  _renderMetrics(): void {
-    if(this._series.length === 0) {
-      this._renderNoDataPointsMessage();
+  renderMetrics(): void {
+    if(this.series.length === 0) {
+      this.renderNoDataPointsMessage();
       return;
     }
     // container for clip path
-    const clipContatiner = this._chartContainer
+    const clipContatiner = this.chartContainer
       .append('g')
       .attr('clip-path', `url(#${this.rectClipId})`)
       .attr('class', 'metrics-container');
@@ -32,15 +32,15 @@ export class ChartwerkScatterPod extends ChartwerkBase<ScatterData, ScatterOptio
       .append('g')
       .attr('class', ' metrics-rect')
 
-    for(let idx = 0; idx < this._series.length; ++idx) {
-      if(this._series[idx].visible === false) {
+    for(let idx = 0; idx < this.series.length; ++idx) {
+      if(this.series[idx].visible === false) {
         continue;
       }
-      const target = this._series[idx].target;
-      const renderType = this._series[idx].renderType;
-      const pointSize = this._series[idx].pointSize || DEFAULT_POINT_SIZE;
+      const target = this.series[idx].target;
+      const renderType = this.series[idx].renderType;
+      const pointSize = this.series[idx].pointSize || DEFAULT_POINT_SIZE;
       this._renderMetric(
-        this._series[idx].datapoints,
+        this.series[idx].datapoints,
         { color: this.getSerieColor(idx), target, renderType, pointSize }
       );
     }
@@ -68,7 +68,7 @@ export class ChartwerkScatterPod extends ChartwerkBase<ScatterData, ScatterOptio
       .attr('cy', (d: [number, number]) => this.yScale(d[0]));
 
     if(metricOptions.renderType === RenderType.LINE) {
-      const lineGenerator = this._d3.line()
+      const lineGenerator = this.d3.line()
         .x((d: [number, number]) => this.xScale(d[1]))
         .y((d: [number, number]) => this.yScale(d[0]));
 
@@ -97,23 +97,27 @@ export class ChartwerkScatterPod extends ChartwerkBase<ScatterData, ScatterOptio
   }
 
   _onPanningEnd() {
-    this._isPanning = false;
+    this.isPanning = false;
     this.onMouseOut();
     this._voronoiDiagramInit();
-    console.log('on panning end scatter plot, but there is no callback');
+    if(this.options.eventsCallbacks !== undefined && this.options.eventsCallbacks.panningEnd !== undefined) {
+      this.options.eventsCallbacks.panningEnd([this.state.xValueRange, this.state.yValueRange]);
+    } else {
+      console.log('on panning end, but there is no callback');
+    }
   }
 
   unhighlight() {
-    this._crosshair.select('.crosshair-circle').style('display', 'none');
+    this.crosshair.select('.crosshair-circle').style('display', 'none');
   }
 
   highlight(d: [number, number, number]) {
     if(!d) {
       this.unhighlight();
     } else {
-      this._crosshair.select('.crosshair-circle')
+      this.crosshair.select('.crosshair-circle')
         .style('display', null)
-        .attr('r', this._series[d[2]].pointSize + POINT_HIGHLIGHT_DIAMETER || DEFAULT_POINT_SIZE + POINT_HIGHLIGHT_DIAMETER)
+        .attr('r', this.series[d[2]].pointSize + POINT_HIGHLIGHT_DIAMETER || DEFAULT_POINT_SIZE + POINT_HIGHLIGHT_DIAMETER)
         .attr('cx', this.xScale(d[1]))
         .attr('cy', this.yScale(d[0]))
         .attr('fill', this.getSerieColor(d[2]));
@@ -121,34 +125,34 @@ export class ChartwerkScatterPod extends ChartwerkBase<ScatterData, ScatterOptio
   }
 
   public renderSharedCrosshair(timestamp: number): void {
-    this._crosshair.style('display', null);
-    this._crosshair.selectAll('.crosshair-circle')
+    this.crosshair.style('display', null);
+    this.crosshair.selectAll('.crosshair-circle')
       .style('display', 'none');
 
     const x = this.xScale(timestamp);
-    this._crosshair.select('#crosshair-line-x')
+    this.crosshair.select('#crosshair-line-x')
       .attr('y1', 0).attr('x1', x)
       .attr('y2', this.height).attr('x2', x);
   }
 
   public hideSharedCrosshair(): void {
-    this._crosshair.style('display', 'none');
+    this.crosshair.style('display', 'none');
   }
 
   onMouseMove(): void {
-    const mousePosition = this._d3.mouse(this._chartContainer.node());
+    const mousePosition = this.d3.mouse(this.chartContainer.node());
     const eventX = mousePosition[0];
     const eventY = mousePosition[1];
-    if(this.isOutOfChart() === true || this._isPanning === true || this._isBrushing === true) {
-      this._crosshair.style('display', 'none');
+    if(this.isOutOfChart() === true || this.isPanning === true || this.isBrushing === true) {
+      this.crosshair.style('display', 'none');
       return;
     } else {
-      this._crosshair.style('display', null);
+      this.crosshair.style('display', null);
     }
-    this._crosshair.select('#crosshair-line-x')
+    this.crosshair.select('#crosshair-line-x')
       .attr('x1', eventX)
       .attr('x2', eventX);
-    this._crosshair.select('#crosshair-line-y')
+    this.crosshair.select('#crosshair-line-y')
       .attr('y1', eventY)
       .attr('y2', eventY);
 
@@ -163,14 +167,14 @@ export class ChartwerkScatterPod extends ChartwerkBase<ScatterData, ScatterOptio
         values: foundItems.data
       }
     }
-    if(this._options.eventsCallbacks === undefined || this._options.eventsCallbacks.mouseMove === undefined) {
+    if(this.options.eventsCallbacks === undefined || this.options.eventsCallbacks.mouseMove === undefined) {
       console.log('Mouse move, but there is no callback');
       return;
     }
     // TODO: group fields
-    this._options.eventsCallbacks.mouseMove({
-      x: this._d3.event.clientX,
-      y: this._d3.event.clientY,
+    this.options.eventsCallbacks.mouseMove({
+      x: this.d3.event.clientX,
+      y: this.d3.event.clientY,
       xval: this.xScale.invert(eventX),
       yval: this.xScale.invert(eventY),
       highlighted,
@@ -180,22 +184,22 @@ export class ChartwerkScatterPod extends ChartwerkBase<ScatterData, ScatterOptio
   }
 
   onMouseOver(): void {
-    if(this.isOutOfChart() === true || this._isPanning === true || this._isBrushing === true) {
-      this._crosshair.style('display', 'none');
+    if(this.isOutOfChart() === true || this.isPanning === true || this.isBrushing === true) {
+      this.crosshair.style('display', 'none');
       return;
     }
-    this._crosshair.style('display', null);
+    this.crosshair.style('display', null);
   }
 
   onMouseOut(): void {
-    if(this._options.eventsCallbacks !== undefined && this._options.eventsCallbacks.mouseOut !== undefined) {
-      this._options.eventsCallbacks.mouseOut();
+    if(this.options.eventsCallbacks !== undefined && this.options.eventsCallbacks.mouseOut !== undefined) {
+      this.options.eventsCallbacks.mouseOut();
     }
-    this._crosshair.style('display', 'none');
+    this.crosshair.style('display', 'none');
   }
 
   getAllDatapoints(): number[][] {
-    const datapointsList = _.map(this._series, (serie, idx) => {
+    const datapointsList = _.map(this.series, (serie, idx) => {
       const datapointsWithSerieIdx = _.map(serie.datapoints, row => _.concat(row, idx));
       return datapointsWithSerieIdx;
     });
@@ -217,7 +221,7 @@ export const VueChartwerkScatterPodObject = {
       }
     );
   },
-  mixins: [VueChartwerkBaseMixin],
+  mixins: [VueChartwerkPodMixin],
   methods: {
     render() {
       const pod = new ChartwerkScatterPod(document.getElementById(this.id), this.series, this.options);
