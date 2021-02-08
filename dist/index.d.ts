@@ -58,7 +58,7 @@ export declare const VueChartwerkScatterPodObject: {
             mouseOut(): void;
             onLegendClick(idx: any): void;
             panningEnd(range: any): void;
-            panningZoom(range: any): void;
+            panning(range: any): void;
             contextMenu(evt: any): void;
         };
     }[];
