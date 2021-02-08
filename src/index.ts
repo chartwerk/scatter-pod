@@ -39,15 +39,15 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       const target = this.series[idx].target;
       const renderType = this.series[idx].renderType;
       const pointSize = this.series[idx].pointSize || DEFAULT_POINT_SIZE;
-      this._renderMetric(
+      this.renderMetric(
         this.series[idx].datapoints,
         { color: this.getSerieColor(idx), target, renderType, pointSize }
       );
     }
-    this._voronoiDiagramInit();
+    this.voronoiDiagramInit();
   }
 
-  _renderMetric(
+  protected renderMetric(
     datapoints: number[][],
     metricOptions: {
       color: string,
@@ -85,7 +85,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     }
   }
 
-  _voronoiDiagramInit(): void {
+  protected voronoiDiagramInit(): void {
     const allDatapoints = this.getAllDatapoints();
     this._voronoiDiagram = d3.voronoi()
       .x(d => this.xScale(d[1]))
@@ -96,10 +96,10 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     this._voronoiRadius = this.width / 10;
   }
 
-  _onPanningEnd() {
+  onPanningEnd(): void {
     this.isPanning = false;
     this.onMouseOut();
-    this._voronoiDiagramInit();
+    this.voronoiDiagramInit();
     if(this.options.eventsCallbacks !== undefined && this.options.eventsCallbacks.panningEnd !== undefined) {
       this.options.eventsCallbacks.panningEnd([this.state.xValueRange, this.state.yValueRange]);
     } else {
@@ -107,7 +107,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     }
   }
 
-  unhighlight() {
+  unhighlight(): void {
     this.crosshair.select('.crosshair-circle').style('display', 'none');
   }
 

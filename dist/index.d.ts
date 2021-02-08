@@ -6,14 +6,14 @@ export declare class ChartwerkScatterPod extends ChartwerkPod<ScatterData, Scatt
     _voronoiRadius: number;
     constructor(el: HTMLElement, _series?: ScatterData[], _options?: ScatterOptions);
     renderMetrics(): void;
-    _renderMetric(datapoints: number[][], metricOptions: {
+    protected renderMetric(datapoints: number[][], metricOptions: {
         color: string;
         target: string;
         renderType: RenderType;
         pointSize: number;
     }): void;
-    _voronoiDiagramInit(): void;
-    _onPanningEnd(): void;
+    protected voronoiDiagramInit(): void;
+    onPanningEnd(): void;
     unhighlight(): void;
     highlight(d: [number, number, number]): void;
     renderSharedCrosshair(timestamp: number): void;
