@@ -64,7 +64,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
   protected appendCrosshairCircle(serieIdx: number): void {
     this.crosshair.append('circle')
       .attr('class', `crosshair-circle crosshair-circle-${serieIdx} crosshair-background`)
-      .attr('r', this.getCrosshairCirceBackgroudSize(serieIdx))
+      .attr('r', this.getCrosshairCirceBackgroundSize(serieIdx))
       .attr('clip-path', `url(#${this.rectClipId})`)
       .attr('fill', this.getSerieColor(serieIdx))
       .style('opacity', CROSSHAIR_BACKGROUND_OPACITY)
@@ -155,7 +155,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     }
   }
 
-  protected getCrosshairCirceBackgroudSize(serieIdx: number): number {
+  protected getCrosshairCirceBackgroundSize(serieIdx: number): number {
     const seriePointSize = this.series[serieIdx].pointSize;
     if(seriePointSize === undefined) {
       return DEFAULT_POINT_SIZE + POINT_HIGHLIGHT_DIAMETER;
