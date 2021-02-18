@@ -147,18 +147,11 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
 
   highlight(d: [number, number, number]) {
     this.unhighlight();
-    console.log('highlight', d);
     if(d!== undefined && d!== null) {
       this.crosshair.selectAll(`.crosshair-circle-${d[2]}`)
         .attr('cx', this.xScale(d[1]))
         .attr('cy', this.yScale(d[0]))
         .style('display', null);
-      // this.crosshair.select('.crosshair-circle')
-      //   .style('display', null)
-      //   .attr('r', this.series[d[2]].pointSize + POINT_HIGHLIGHT_DIAMETER || DEFAULT_POINT_SIZE + POINT_HIGHLIGHT_DIAMETER)
-      //   .attr('cx', this.xScale(d[1]))
-      //   .attr('cy', this.yScale(d[0]))
-      //   .attr('fill', this.getSerieColor(d[2]));
     }
   }
 
