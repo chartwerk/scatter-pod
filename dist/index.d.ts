@@ -6,6 +6,9 @@ export declare class ChartwerkScatterPod extends ChartwerkPod<ScatterData, Scatt
     _voronoiRadius: number;
     constructor(el: HTMLElement, _series?: ScatterData[], _options?: ScatterOptions);
     renderMetrics(): void;
+    protected updateCrosshair(): void;
+    appendCrosshairCircles(): void;
+    protected appendCrosshairCircle(serieIdx: number): void;
     protected renderMetric(datapoints: number[][], metricOptions: {
         color: string;
         target: string;
@@ -16,6 +19,7 @@ export declare class ChartwerkScatterPod extends ChartwerkPod<ScatterData, Scatt
     onPanningEnd(): void;
     unhighlight(): void;
     highlight(d: [number, number, number]): void;
+    getCrosshairCirceBackgroudSize(serieIdx: number): number;
     renderSharedCrosshair(timestamp: number): void;
     hideSharedCrosshair(): void;
     onMouseMove(): void;
