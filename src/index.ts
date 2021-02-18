@@ -7,6 +7,8 @@ import * as _ from 'lodash';
 // TODO: use pod state with defaults
 const DEFAULT_POINT_SIZE = 4;
 const POINT_HIGHLIGHT_DIAMETER = 4;
+const CROSSHAIR_BACKGROUND_RAIDUS = 9;
+const CROSSHAIR_BACKGROUND_OPACITY = 0.3;
 
 export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOptions> {
   _metricsContainer: any;
@@ -22,6 +24,8 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       this.renderNoDataPointsMessage();
       return;
     }
+    this.updateCrosshair();
+
     // container for clip path
     const clipContatiner = this.chartContainer
       .append('g')
@@ -45,6 +49,36 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       );
     }
     this.voronoiDiagramInit();
+  }
+
+  protected updateCrosshair(): void {
+    this.appendCrosshairCircles();
+  }
+
+  appendCrosshairCircles(): void {
+    this.series.forEach((serie: ScatterData, serieIdx: number) => {
+      this.appendCrosshairCircle(serieIdx);
+    });
+  }
+
+  protected appendCrosshairCircle(serieIdx: number): void {
+    this.crosshair.append('circle')
+      .attr('class', `crosshair-circle crosshair-circle-${serieIdx} crosshair-background`)
+      .attr('r', this.getCrosshairCirceBackgroudSize(serieIdx))
+      .attr('clip-path', `url(#${this.rectClipId})`)
+      .attr('fill', this.getSerieColor(serieIdx))
+      .style('opacity', CROSSHAIR_BACKGROUND_OPACITY)
+      .style('pointer-events', 'none')
+      .style('display', 'none');
+
+    this.crosshair
+      .append('circle')
+      .attr('class', `crosshair-circle crosshair-circle-${serieIdx}`)
+      .attr('clip-path', `url(#${this.rectClipId})`)
+      .attr('fill', this.getSerieColor(serieIdx))
+      .attr('r', this.series[serieIdx].pointSize || DEFAULT_POINT_SIZE)
+      .style('pointer-events', 'none')
+      .style('display', 'none');
   }
 
   protected renderMetric(
@@ -108,20 +142,32 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
   }
 
   unhighlight(): void {
-    this.crosshair.select('.crosshair-circle').style('display', 'none');
+    this.crosshair.selectAll('.crosshair-circle').style('display', 'none');
   }
 
   highlight(d: [number, number, number]) {
-    if(!d) {
-      this.unhighlight();
-    } else {
-      this.crosshair.select('.crosshair-circle')
-        .style('display', null)
-        .attr('r', this.series[d[2]].pointSize + POINT_HIGHLIGHT_DIAMETER || DEFAULT_POINT_SIZE + POINT_HIGHLIGHT_DIAMETER)
+    this.unhighlight();
+    console.log('highlight', d);
+    if(d!== undefined && d!== null) {
+      this.crosshair.selectAll(`.crosshair-circle-${d[2]}`)
         .attr('cx', this.xScale(d[1]))
         .attr('cy', this.yScale(d[0]))
-        .attr('fill', this.getSerieColor(d[2]));
+        .style('display', null);
+      // this.crosshair.select('.crosshair-circle')
+      //   .style('display', null)
+      //   .attr('r', this.series[d[2]].pointSize + POINT_HIGHLIGHT_DIAMETER || DEFAULT_POINT_SIZE + POINT_HIGHLIGHT_DIAMETER)
+      //   .attr('cx', this.xScale(d[1]))
+      //   .attr('cy', this.yScale(d[0]))
+      //   .attr('fill', this.getSerieColor(d[2]));
     }
+  }
+
+  getCrosshairCirceBackgroudSize(serieIdx: number): number {
+    const seriePointSize = this.series[serieIdx].pointSize;
+    if(seriePointSize === undefined) {
+      return DEFAULT_POINT_SIZE + POINT_HIGHLIGHT_DIAMETER;
+    }
+    return seriePointSize + POINT_HIGHLIGHT_DIAMETER;
   }
 
   public renderSharedCrosshair(timestamp: number): void {
