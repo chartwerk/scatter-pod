@@ -155,7 +155,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     }
   }
 
-  getCrosshairCirceBackgroudSize(serieIdx: number): number {
+  protected getCrosshairCirceBackgroudSize(serieIdx: number): number {
     const seriePointSize = this.series[serieIdx].pointSize;
     if(seriePointSize === undefined) {
       return DEFAULT_POINT_SIZE + POINT_HIGHLIGHT_DIAMETER;

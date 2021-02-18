@@ -19,7 +19,7 @@ export declare class ChartwerkScatterPod extends ChartwerkPod<ScatterData, Scatt
     onPanningEnd(): void;
     unhighlight(): void;
     highlight(d: [number, number, number]): void;
-    getCrosshairCirceBackgroudSize(serieIdx: number): number;
+    protected getCrosshairCirceBackgroudSize(serieIdx: number): number;
     renderSharedCrosshair(timestamp: number): void;
     hideSharedCrosshair(): void;
     onMouseMove(): void;
