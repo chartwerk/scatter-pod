@@ -47,9 +47,17 @@
               range: [-50, 250]
             }
           },
-          zoom: {
-            orientation: 'square',
-            type: 'brush'
+          zoomEvents: {
+            brush: {
+              isActive: true,
+              keyEvent: 'shift',
+              orientation: 'rectangle'
+            },
+            pan: {
+              isActive: true,
+              keyEvent: 'main',
+              orientation: 'both'
+            }
           },
           crosshair: {
             orientation: 'both',
