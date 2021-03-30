@@ -1,5 +1,5 @@
 import { ChartwerkPod, VueChartwerkPodMixin, TickOrientation, TimeFormat } from '@chartwerk/core';
-import { ScatterData, ScatterOptions, RenderType } from './types';
+import { ScatterData, ScatterOptions, PointType, LineType } from './types';
 
 import * as d3 from 'd3';
 import * as _ from 'lodash';
@@ -9,6 +9,8 @@ const DEFAULT_POINT_SIZE = 4;
 const POINT_HIGHLIGHT_DIAMETER = 4;
 const CROSSHAIR_BACKGROUND_RAIDUS = 9;
 const CROSSHAIR_BACKGROUND_OPACITY = 0.3;
+const DEFAULT_POINT_TYPE = PointType.CIRCLE;
+const DEFAULT_LINE_TYPE = LineType.NONE;
 
 export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOptions> {
   _metricsContainer: any;
@@ -41,11 +43,12 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
         continue;
       }
       const target = this.series[idx].target;
-      const renderType = this.series[idx].renderType;
+      const pointType = this.series[idx].pointType || DEFAULT_POINT_TYPE;
+      const lineType = this.series[idx].lineType || DEFAULT_LINE_TYPE;
       const pointSize = this.series[idx].pointSize || DEFAULT_POINT_SIZE;
       this.renderMetric(
         this.series[idx].datapoints,
-        { color: this.getSerieColor(idx), target, renderType, pointSize }
+        { color: this.getSerieColor(idx), target, pointType, lineType, pointSize }
       );
     }
     this.voronoiDiagramInit();
@@ -86,36 +89,71 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     metricOptions: {
       color: string,
       target: string,
-      renderType: RenderType,
+      pointType: PointType,
+      lineType: LineType,
       pointSize: number
     }
   ): void {
-    this._metricsContainer.selectAll(null)
-      .data(datapoints)
-      .enter()
-      .append('circle')
-      .attr('class', `metric-element metric-circle`)
-      .attr('r', metricOptions.pointSize)
-      .style('fill', metricOptions.color)
+    this.renderPoints(datapoints, metricOptions.pointType, metricOptions.pointSize, metricOptions.color);
+    this.renderLine(datapoints, metricOptions.lineType, metricOptions.color);
+  }
+
+  renderLine(datapoints: number[][], lineType: LineType, color: string): void {
+    if(lineType === LineType.NONE) {
+      return;
+    }
+    let strokeDasharray;
+    if(lineType === LineType.DASHED) {
+      strokeDasharray = 4;
+    }
+    const lineGenerator = this.d3.line()
+      .x((d: [number, number]) => this.xScale(d[1]))
+      .y((d: [number, number]) => this.yScale(d[0]));
+
+    this._metricsContainer
+      .append('path')
+      .datum(datapoints)
+      .attr('class', 'metric-path')
+      .attr('fill', 'none')
       .style('pointer-events', 'none')
-      .attr('cx', (d: [number, number]) => this.xScale(d[1]))
-      .attr('cy', (d: [number, number]) => this.yScale(d[0]));
+      .attr('stroke', color)
+      .attr('stroke-width', 1)
+      .attr('stroke-opacity', 0.7)
+      .attr('stroke-dasharray', strokeDasharray)
+      .attr('d', lineGenerator);
+  }
 
-    if(metricOptions.renderType === RenderType.LINE) {
-      const lineGenerator = this.d3.line()
-        .x((d: [number, number]) => this.xScale(d[1]))
-        .y((d: [number, number]) => this.yScale(d[0]));
-
-      this._metricsContainer
-        .append('path')
-        .datum(datapoints)
-        .attr('class', 'metric-path')
-        .attr('fill', 'none')
-        .style('pointer-events', 'none')
-        .attr('stroke', metricOptions.color)
-        .attr('stroke-width', 1)
-        .attr('stroke-opacity', 0.7)
-        .attr('d', lineGenerator);
+  protected renderPoints(datapoints: number[][], pointType: PointType, pointSize: number, color: string): void {
+    switch(pointType) {
+      case PointType.NONE:
+        return;
+      case PointType.CIRCLE:
+        this._metricsContainer.selectAll(null)
+          .data(datapoints)
+          .enter()
+          .append('circle')
+          .attr('class', `metric-element metric-circle`)
+          .attr('r', pointSize)
+          .style('fill', color)
+          .style('pointer-events', 'none')
+          .attr('cx', (d: [number, number]) => this.xScale(d[1]))
+          .attr('cy', (d: [number, number]) => this.yScale(d[0]));
+        return;
+      case PointType.RECTANGLE:
+        this._metricsContainer.selectAll(null)
+          .data(datapoints)
+          .enter()
+          .append('rect')
+          .attr('class', `metric-element metric-circle`)
+          .style('fill', color)
+          .style('pointer-events', 'none')
+          .attr('x', (d: [number, number]) => this.xScale(d[1]) - pointSize / 2)
+          .attr('y', (d: [number, number]) => this.yScale(d[0]) - pointSize / 2)
+          .attr('width', pointSize)
+          .attr('height', pointSize);
+          return;
+      default:
+        throw new Error(`Unknown render point type: ${pointType}`);
     }
   }
 
@@ -269,4 +307,4 @@ export const VueChartwerkScatterPodObject = {
   }
 };
 
-export { ScatterData, ScatterOptions, TickOrientation, TimeFormat };
+export { ScatterData, ScatterOptions, TickOrientation, TimeFormat, PointType, LineType };
