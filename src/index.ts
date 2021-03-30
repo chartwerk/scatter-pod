@@ -65,23 +65,53 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
   }
 
   protected appendCrosshairCircle(serieIdx: number): void {
-    this.crosshair.append('circle')
-      .attr('class', `crosshair-circle crosshair-circle-${serieIdx} crosshair-background`)
-      .attr('r', this.getCrosshairCirceBackgroundSize(serieIdx))
-      .attr('clip-path', `url(#${this.rectClipId})`)
-      .attr('fill', this.getSerieColor(serieIdx))
-      .style('opacity', CROSSHAIR_BACKGROUND_OPACITY)
-      .style('pointer-events', 'none')
-      .style('display', 'none');
+    const pointType = this.series[serieIdx].pointType || DEFAULT_POINT_TYPE;
+    switch(pointType) {
+      case PointType.NONE:
+        return;
+      case PointType.CIRCLE:
+        this.crosshair.append('circle')
+          .attr('class', `crosshair-circle crosshair-circle-${serieIdx} crosshair-background`)
+          .attr('r', this.getCrosshairCirceBackgroundSize(serieIdx))
+          .attr('clip-path', `url(#${this.rectClipId})`)
+          .attr('fill', this.getSerieColor(serieIdx))
+          .style('opacity', CROSSHAIR_BACKGROUND_OPACITY)
+          .style('pointer-events', 'none')
+          .style('display', 'none');
 
-    this.crosshair
-      .append('circle')
-      .attr('class', `crosshair-circle crosshair-circle-${serieIdx}`)
-      .attr('clip-path', `url(#${this.rectClipId})`)
-      .attr('fill', this.getSerieColor(serieIdx))
-      .attr('r', this.series[serieIdx].pointSize || DEFAULT_POINT_SIZE)
-      .style('pointer-events', 'none')
-      .style('display', 'none');
+        this.crosshair
+          .append('circle')
+          .attr('class', `crosshair-circle crosshair-circle-${serieIdx}`)
+          .attr('clip-path', `url(#${this.rectClipId})`)
+          .attr('fill', this.getSerieColor(serieIdx))
+          .attr('r', this.series[serieIdx].pointSize || DEFAULT_POINT_SIZE)
+          .style('pointer-events', 'none')
+          .style('display', 'none');
+        return;
+      case PointType.RECTANGLE:
+        this.crosshair.append('rect')
+          .attr('class', `crosshair-circle crosshair-circle-${serieIdx} crosshair-background`)
+          .attr('width', this.getCrosshairCirceBackgroundSize(serieIdx))
+          .attr('height', this.getCrosshairCirceBackgroundSize(serieIdx))
+          .attr('clip-path', `url(#${this.rectClipId})`)
+          .attr('fill', this.getSerieColor(serieIdx))
+          .style('opacity', CROSSHAIR_BACKGROUND_OPACITY)
+          .style('pointer-events', 'none')
+          .style('display', 'none');
+
+        this.crosshair
+          .append('rect')
+          .attr('class', `crosshair-circle crosshair-circle-${serieIdx}`)
+          .attr('clip-path', `url(#${this.rectClipId})`)
+          .attr('fill', this.getSerieColor(serieIdx))
+          .attr('width', this.series[serieIdx].pointSize || DEFAULT_POINT_SIZE)
+          .attr('height', this.series[serieIdx].pointSize || DEFAULT_POINT_SIZE)
+          .style('pointer-events', 'none')
+          .style('display', 'none');
+          return;
+      default:
+        throw new Error(`Unknown render point type: ${pointType}`);
+    }
   }
 
   protected renderMetric(
@@ -186,9 +216,12 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
   highlight(d: [number, number, number]) {
     this.unhighlight();
     if(d !== undefined && d !== null) {
+      const size = this.getCrosshairCirceBackgroundSize(d[2]);
       this.crosshair.selectAll(`.crosshair-circle-${d[2]}`)
         .attr('cx', this.xScale(d[1]))
         .attr('cy', this.yScale(d[0]))
+        .attr('x', this.xScale(d[1]) - size / 2)
+        .attr('y', this.yScale(d[0]) - size / 2)
         .style('display', null);
     }
   }
