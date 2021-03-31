@@ -1,5 +1,5 @@
 import { ChartwerkPod, TickOrientation, TimeFormat } from '@chartwerk/core';
-import { ScatterData, ScatterOptions, RenderType } from './types';
+import { ScatterData, ScatterOptions, PointType, LineType } from './types';
 export declare class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOptions> {
     _metricsContainer: any;
     _voronoiDiagram: any;
@@ -7,14 +7,17 @@ export declare class ChartwerkScatterPod extends ChartwerkPod<ScatterData, Scatt
     constructor(el: HTMLElement, _series?: ScatterData[], _options?: ScatterOptions);
     renderMetrics(): void;
     protected updateCrosshair(): void;
-    appendCrosshairCircles(): void;
-    protected appendCrosshairCircle(serieIdx: number): void;
+    appendCrosshairPoints(): void;
+    protected appendCrosshairPoint(serieIdx: number): void;
     protected renderMetric(datapoints: number[][], metricOptions: {
         color: string;
         target: string;
-        renderType: RenderType;
+        pointType: PointType;
+        lineType: LineType;
         pointSize: number;
     }): void;
+    renderLine(datapoints: number[][], lineType: LineType, color: string): void;
+    protected renderPoints(datapoints: number[][], pointType: PointType, pointSize: number, color: string): void;
     protected voronoiDiagramInit(): void;
     onPanningEnd(): void;
     unhighlight(): void;
@@ -70,4 +73,4 @@ export declare const VueChartwerkScatterPodObject: {
         render(): void;
     };
 };
-export { ScatterData, ScatterOptions, TickOrientation, TimeFormat };
+export { ScatterData, ScatterOptions, TickOrientation, TimeFormat, PointType, LineType };

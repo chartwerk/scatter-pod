@@ -16,7 +16,7 @@
           {
             target: 'test1',
             datapoints: [
-              [100, 0],
+              [100, -50],
               [200, 150],
               [100, 160],
               [150, 170],
@@ -24,7 +24,8 @@
               [150, 250]
             ],
             color: 'red',
-            renderType: 'line'
+            lineType: 'dashed',
+            pointType: 'circle'
           },
           {
             target: 'test2',
@@ -33,23 +34,33 @@
               [175, 60],
               [150, 70]
             ],
-            color: 'green'
+            color: 'green',
+            pointType: 'rectangle',
+            pointSize: 11
           }
         ],
         {
           axis: {
             x: {
               format: 'numeric',
-              range: [-60, 300]
+              range: [-100, 300]
             },
             y: {
               invert: true,
               range: [-50, 250]
             }
           },
-          zoom: {
-            orientation: 'square',
-            type: 'brush'
+          zoomEvents: {
+            brush: {
+              isActive: true,
+              keyEvent: 'shift',
+              orientation: 'rectangle'
+            },
+            pan: {
+              isActive: true,
+              keyEvent: 'main',
+              orientation: 'both'
+            }
           },
           crosshair: {
             orientation: 'both',
