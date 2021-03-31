@@ -211,11 +211,13 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
   }
 
   protected getCrosshairCirceBackgroundSize(serieIdx: number): number {
-    const seriePointSize = this.series[serieIdx].pointSize;
-    if(seriePointSize === undefined) {
-      return DEFAULT_POINT_SIZE + POINT_HIGHLIGHT_DIAMETER;
+    const seriePointSize = this.series[serieIdx].pointSize || DEFAULT_POINT_SIZE;
+    const pointType = this.series[serieIdx].pointType || DEFAULT_POINT_TYPE;
+    let highlightDiameter = POINT_HIGHLIGHT_DIAMETER;
+    if(pointType === PointType.RECTANGLE) {
+      highlightDiameter = highlightDiameter * 2;
     }
-    return seriePointSize + POINT_HIGHLIGHT_DIAMETER;
+    return seriePointSize + highlightDiameter;
   }
 
   public renderSharedCrosshair(timestamp: number): void {
