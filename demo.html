@@ -16,25 +16,27 @@
           {
             target: 'test1',
             datapoints: [
-              [100, -50],
-              [200, 150],
-              [100, 160],
-              [150, 170],
-              [150, 180],
-              [150, 250]
+              [100, -50, 0],
+              [200, 150, 0],
+              [100, 160, 1],
+              [150, 170, 1],
+              [150, 180, 0],
+              [150, 250, 1]
             ],
-            color: 'red',
+            color: 'black',
+            colorFormatter: d => d[2] === 0 ? 'red' : 'green',
             lineType: 'dashed',
             pointType: 'circle'
           },
           {
             target: 'test2',
             datapoints: [
-              [200, 50],
-              [175, 60],
-              [150, 70]
+              [200, 50, 1],
+              [175, 60, 0],
+              [150, 70, 1]
             ],
-            color: 'green',
+            color: 'purple',
+            colorFormatter: d => d[2] === 0 ? 'red' : 'green',
             pointType: 'rectangle',
             pointSize: 11
           }
