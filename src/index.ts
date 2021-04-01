@@ -207,10 +207,10 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     this.unhighlight();
 
     if(datapoint !== undefined && datapoint !== null) {
-      const serieIdx = datapoint[3];
+      const serieIdx = _.last(datapoint);
       const size = this.getCrosshairCircleBackgroundSize(serieIdx);
       const colorFormatter = this.series[serieIdx].colorFormatter;
-      this.crosshair.selectAll(`.crosshair-point-${datapoint[3]}`)
+      this.crosshair.selectAll(`.crosshair-point-${_.last(datapoint)}`)
         .attr('cx', this.xScale(datapoint[1]))
         .attr('cy', this.yScale(datapoint[0]))
         .attr('x', this.xScale(datapoint[1]) - size / 2)
