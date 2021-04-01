@@ -1,5 +1,5 @@
 import { ChartwerkPod, TickOrientation, TimeFormat } from '@chartwerk/core';
-import { ScatterData, ScatterOptions, PointType, LineType } from './types';
+import { ScatterData, ScatterOptions, PointType, LineType, ColorFormatter } from './types';
 export declare class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOptions> {
     _metricsContainer: any;
     _voronoiDiagram: any;
@@ -11,18 +11,19 @@ export declare class ChartwerkScatterPod extends ChartwerkPod<ScatterData, Scatt
     protected appendCrosshairPoint(serieIdx: number): void;
     protected renderMetric(datapoints: number[][], metricOptions: {
         color: string;
+        colorFormatter: ColorFormatter;
         target: string;
         pointType: PointType;
         lineType: LineType;
         pointSize: number;
     }): void;
     renderLine(datapoints: number[][], lineType: LineType, color: string): void;
-    protected renderPoints(datapoints: number[][], pointType: PointType, pointSize: number, color: string): void;
+    protected renderPoints(datapoints: number[][], pointType: PointType, pointSize: number, color: string | ColorFormatter): void;
     protected voronoiDiagramInit(): void;
     onPanningEnd(): void;
     unhighlight(): void;
-    highlight(d: [number, number, number]): void;
-    protected getCrosshairCirceBackgroundSize(serieIdx: number): number;
+    highlight(datapoint: number[]): void;
+    protected getCrosshairCircleBackgroundSize(serieIdx: number): number;
     renderSharedCrosshair(timestamp: number): void;
     hideSharedCrosshair(): void;
     onMouseMove(): void;

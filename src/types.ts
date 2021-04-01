@@ -1,9 +1,11 @@
 import { TimeSerie, Options } from '@chartwerk/core';
 
+
 type ScatterDataParams = {
   pointType: PointType;
   lineType: LineType;
   pointSize: number;
+  colorFormatter?: ColorFormatter
 }
 export type ScatterData = TimeSerie & Partial<ScatterDataParams>;
 export type ScatterOptions = Options;
@@ -19,3 +21,5 @@ export enum LineType {
   SOLID = 'solid',
   DASHED = 'dashed'
 }
+
+export type ColorFormatter = (datapoint: number[]) => string;

@@ -3,6 +3,7 @@ declare type ScatterDataParams = {
     pointType: PointType;
     lineType: LineType;
     pointSize: number;
+    colorFormatter?: ColorFormatter;
 };
 export declare type ScatterData = TimeSerie & Partial<ScatterDataParams>;
 export declare type ScatterOptions = Options;
@@ -16,4 +17,5 @@ export declare enum LineType {
     SOLID = "solid",
     DASHED = "dashed"
 }
+export declare type ColorFormatter = (datapoint: number[]) => string;
 export {};
