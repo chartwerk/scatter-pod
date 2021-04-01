@@ -1,5 +1,5 @@
 import { ChartwerkPod, VueChartwerkPodMixin, TickOrientation, TimeFormat } from '@chartwerk/core';
-import { ScatterData, ScatterOptions, PointType, LineType } from './types';
+import { ScatterData, ScatterOptions, PointType, LineType, ColorFormatter } from './types';
 
 import * as d3 from 'd3';
 import * as _ from 'lodash';
@@ -48,7 +48,14 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       const pointSize = this.series[idx].pointSize || DEFAULT_POINT_SIZE;
       this.renderMetric(
         this.series[idx].datapoints,
-        { color: this.getSerieColor(idx), target, pointType, lineType, pointSize }
+        {
+          color: this.getSerieColor(idx),
+          colorFormatter: this.series[idx].colorFormatter,
+          target,
+          pointType,
+          lineType,
+          pointSize
+        }
       );
     }
     this.voronoiDiagramInit();
@@ -74,9 +81,8 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       case PointType.CIRCLE:
         this.crosshair.append('circle')
           .attr('class', `crosshair-point crosshair-point-${serieIdx} crosshair-background`)
-          .attr('r', this.getCrosshairCirceBackgroundSize(serieIdx))
+          .attr('r', this.getCrosshairCircleBackgroundSize(serieIdx))
           .attr('clip-path', `url(#${this.rectClipId})`)
-          .attr('fill', this.getSerieColor(serieIdx))
           .style('opacity', CROSSHAIR_BACKGROUND_OPACITY)
           .style('pointer-events', 'none')
           .style('display', 'none');
@@ -84,10 +90,9 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       case PointType.RECTANGLE:
         this.crosshair.append('rect')
           .attr('class', `crosshair-point crosshair-point-${serieIdx} crosshair-background`)
-          .attr('width', this.getCrosshairCirceBackgroundSize(serieIdx))
-          .attr('height', this.getCrosshairCirceBackgroundSize(serieIdx))
+          .attr('width', this.getCrosshairCircleBackgroundSize(serieIdx))
+          .attr('height', this.getCrosshairCircleBackgroundSize(serieIdx))
           .attr('clip-path', `url(#${this.rectClipId})`)
-          .attr('fill', this.getSerieColor(serieIdx))
           .style('opacity', CROSSHAIR_BACKGROUND_OPACITY)
           .style('pointer-events', 'none')
           .style('display', 'none');
@@ -101,13 +106,14 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     datapoints: number[][],
     metricOptions: {
       color: string,
+      colorFormatter: ColorFormatter,
       target: string,
       pointType: PointType,
       lineType: LineType,
       pointSize: number
     }
   ): void {
-    this.renderPoints(datapoints, metricOptions.pointType, metricOptions.pointSize, metricOptions.color);
+    this.renderPoints(datapoints, metricOptions.pointType, metricOptions.pointSize, metricOptions.colorFormatter || metricOptions.color);
     this.renderLine(datapoints, metricOptions.lineType, metricOptions.color);
   }
 
@@ -137,7 +143,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       .attr('d', lineGenerator);
   }
 
-  protected renderPoints(datapoints: number[][], pointType: PointType, pointSize: number, color: string): void {
+  protected renderPoints(datapoints: number[][], pointType: PointType, pointSize: number, color: string | ColorFormatter): void {
     switch(pointType) {
       case PointType.NONE:
         return;
@@ -197,20 +203,24 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     this.crosshair.selectAll('.crosshair-point').style('display', 'none');
   }
 
-  highlight(d: [number, number, number]) {
+  highlight(datapoint: number[]) {
     this.unhighlight();
-    if(d !== undefined && d !== null) {
-      const size = this.getCrosshairCirceBackgroundSize(d[2]);
-      this.crosshair.selectAll(`.crosshair-point-${d[2]}`)
-        .attr('cx', this.xScale(d[1]))
-        .attr('cy', this.yScale(d[0]))
-        .attr('x', this.xScale(d[1]) - size / 2)
-        .attr('y', this.yScale(d[0]) - size / 2)
+
+    if(datapoint !== undefined && datapoint !== null) {
+      const serieIdx = datapoint[3];
+      const size = this.getCrosshairCircleBackgroundSize(serieIdx);
+      const colorFormatter = this.series[serieIdx].colorFormatter;
+      this.crosshair.selectAll(`.crosshair-point-${datapoint[3]}`)
+        .attr('cx', this.xScale(datapoint[1]))
+        .attr('cy', this.yScale(datapoint[0]))
+        .attr('x', this.xScale(datapoint[1]) - size / 2)
+        .attr('y', this.yScale(datapoint[0]) - size / 2)
+        .attr('fill', colorFormatter !== undefined ? colorFormatter(datapoint) : this.series[serieIdx].color)
         .style('display', null);
     }
   }
 
-  protected getCrosshairCirceBackgroundSize(serieIdx: number): number {
+  protected getCrosshairCircleBackgroundSize(serieIdx: number): number {
     const seriePointSize = this.series[serieIdx].pointSize || DEFAULT_POINT_SIZE;
     const pointType = this.series[serieIdx].pointType || DEFAULT_POINT_TYPE;
     let highlightDiameter = POINT_HIGHLIGHT_DIAMETER;
