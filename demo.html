@@ -54,12 +54,12 @@
           },
           zoomEvents: {
             brush: {
-              isActive: false,
-              keyEvent: 'shift',
-              orientation: 'rectangle'
+              isActive: true,
+              keyEvent: 'main',
+              orientation: 'square'
             },
             pan: {
-              isActive: true,
+              isActive: false,
               keyEvent: 'main',
               orientation: 'both'
             }
@@ -71,6 +71,9 @@
           labelFormat: {
             yAxis: 'y',
             xAxis: 'x'
+          },
+          eventsCallbacks: {
+            zoomOut: () => { pod.render() }
           }
         }
       );
