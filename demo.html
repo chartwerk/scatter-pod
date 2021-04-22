@@ -26,8 +26,7 @@
             color: 'black',
             colorFormatter: d => d[2] === 0 ? 'red' : 'green',
             lineType: 'dashed',
-            pointType: 'circle',
-            yOrientation: 'left'
+            pointType: 'circle'
           },
           {
             target: 'test2',
@@ -40,7 +39,6 @@
             colorFormatter: d => d[2] === 0 ? 'red' : 'green',
             pointType: 'rectangle',
             pointSize: 11,
-            yOrientation: 'right'
           }
         ],
         {
@@ -52,11 +50,6 @@
             y: {
               invert: true,
               range: [-100, 250]
-            },
-            y1: {
-              isActive: true,
-              invert: false,
-              range: [0, 250]
             }
           },
           zoomEvents: {
