@@ -26,7 +26,8 @@
             color: 'black',
             colorFormatter: d => d[2] === 0 ? 'red' : 'green',
             lineType: 'dashed',
-            pointType: 'circle'
+            pointType: 'circle',
+            yOrientation: 'left'
           },
           {
             target: 'test2',
@@ -38,7 +39,8 @@
             color: 'purple',
             colorFormatter: d => d[2] === 0 ? 'red' : 'green',
             pointType: 'rectangle',
-            pointSize: 11
+            pointSize: 11,
+            yOrientation: 'right'
           }
         ],
         {
@@ -49,17 +51,22 @@
             },
             y: {
               invert: true,
-              range: [-50, 250]
+              range: [-100, 250]
+            },
+            y1: {
+              isActive: true,
+              invert: false,
+              range: [0, 250]
             }
           },
           zoomEvents: {
             brush: {
-              isActive: true,
+              isActive: false,
               keyEvent: 'main',
               orientation: 'square'
             },
             pan: {
-              isActive: false,
+              isActive: true,
               keyEvent: 'main',
               orientation: 'both'
             }
@@ -74,7 +81,8 @@
           },
           eventsCallbacks: {
             zoomOut: () => { pod.render() }
-          }
+          },
+          margin: { top: 30, right: 30, bottom: 40, left: 30 }
         }
       );
       pod.render();

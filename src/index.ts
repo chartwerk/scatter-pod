@@ -1,4 +1,4 @@
-import { ChartwerkPod, VueChartwerkPodMixin, TickOrientation, TimeFormat } from '@chartwerk/core';
+import { ChartwerkPod, VueChartwerkPodMixin, TickOrientation, TimeFormat, yAxisOrientation } from '@chartwerk/core';
 import { ScatterData, ScatterOptions, PointType, LineType, ColorFormatter } from './types';
 
 import * as d3 from 'd3';
@@ -14,7 +14,8 @@ const DEFAULT_LINE_DASHED_AMOUNT = 4;
 
 export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOptions> {
   _metricsContainer: any;
-  _voronoiDiagram: any;
+  _voronoiDiagramY: any;
+  _voronoiDiagramY1: any;
   _voronoiRadius: number;
 
   constructor(el: HTMLElement, _series: ScatterData[] = [], _options: ScatterOptions = {}) {
@@ -46,6 +47,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       const pointType = this.series[idx].pointType || DEFAULT_POINT_TYPE;
       const lineType = this.series[idx].lineType || DEFAULT_LINE_TYPE;
       const pointSize = this.series[idx].pointSize || DEFAULT_POINT_SIZE;
+      const orientation = this.series[idx].yOrientation;
       this.renderMetric(
         this.series[idx].datapoints,
         {
@@ -54,7 +56,8 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
           target,
           pointType,
           lineType,
-          pointSize
+          pointSize,
+          orientation
         }
       );
     }
@@ -110,14 +113,15 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       target: string,
       pointType: PointType,
       lineType: LineType,
-      pointSize: number
+      pointSize: number,
+      orientation: yAxisOrientation
     }
   ): void {
-    this.renderPoints(datapoints, metricOptions.pointType, metricOptions.pointSize, metricOptions.colorFormatter || metricOptions.color);
-    this.renderLine(datapoints, metricOptions.lineType, metricOptions.color);
+    this.renderPoints(datapoints, metricOptions.pointType, metricOptions.pointSize, metricOptions.colorFormatter || metricOptions.color, metricOptions.orientation);
+    this.renderLine(datapoints, metricOptions.lineType, metricOptions.color, metricOptions.orientation);
   }
 
-  renderLine(datapoints: number[][], lineType: LineType, color: string): void {
+  renderLine(datapoints: number[][], lineType: LineType, color: string, orientation: yAxisOrientation): void {
     if(lineType === LineType.NONE) {
       return;
     }
@@ -128,7 +132,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     }
     const lineGenerator = this.d3.line()
       .x((d: [number, number]) => this.xScale(d[1]))
-      .y((d: [number, number]) => this.yScale(d[0]));
+      .y((d: [number, number]) => this.getYScale(orientation)(d[0]));
 
     this._metricsContainer
       .append('path')
@@ -143,7 +147,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       .attr('d', lineGenerator);
   }
 
-  protected renderPoints(datapoints: number[][], pointType: PointType, pointSize: number, color: string | ColorFormatter): void {
+  protected renderPoints(datapoints: number[][], pointType: PointType, pointSize: number, color: string | ColorFormatter, orientation: yAxisOrientation): void {
     switch(pointType) {
       case PointType.NONE:
         return;
@@ -157,7 +161,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
           .style('fill', color)
           .style('pointer-events', 'none')
           .attr('cx', (d: [number, number]) => this.xScale(d[1]))
-          .attr('cy', (d: [number, number]) => this.yScale(d[0]));
+          .attr('cy', (d: [number, number]) => this.getYScale(orientation)(d[0]));
         return;
       case PointType.RECTANGLE:
         this._metricsContainer.selectAll(null)
@@ -168,7 +172,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
           .style('fill', color)
           .style('pointer-events', 'none')
           .attr('x', (d: [number, number]) => this.xScale(d[1]) - pointSize / 2)
-          .attr('y', (d: [number, number]) => this.yScale(d[0]) - pointSize / 2)
+          .attr('y', (d: [number, number]) => this.getYScale(orientation)(d[0]) - pointSize / 2)
           .attr('width', pointSize)
           .attr('height', pointSize);
           return;
@@ -178,12 +182,22 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
   }
 
   protected voronoiDiagramInit(): void {
-    const allDatapoints = this.getAllDatapoints();
-    this._voronoiDiagram = d3.voronoi()
-      .x(d => this.xScale(d[1]))
-      .y(d => this.yScale(d[0]))
-      // @ts-ignore
-      .size([this.width, this.height])(allDatapoints);
+    const ySerieDatapoints = this.getAllDatapointsY();
+    if(ySerieDatapoints !== undefined) {
+      this._voronoiDiagramY = d3.voronoi()
+        .x(d => this.xScale(d[1]))
+        .y(d => this.yScale(d[0]))
+        // @ts-ignore
+        .size([this.width, this.height])(ySerieDatapoints);
+    }
+    const y1SerieDatapoints = this.getAllDatapointsY1();
+    if(y1SerieDatapoints !== undefined) {
+      this._voronoiDiagramY1 = d3.voronoi()
+        .x(d => this.xScale(d[1]))
+        .y(d => this.y1Scale(d[0]))
+        // @ts-ignore
+        .size([this.width, this.height])(y1SerieDatapoints);
+    }
     // TODO: move const to option;
     this._voronoiRadius = this.width / 10;
   }
@@ -207,14 +221,17 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     this.unhighlight();
 
     if(datapoint !== undefined && datapoint !== null) {
+      console.log('datapoint', datapoint)
       const serieIdx = _.last(datapoint);
+      const serieOrientation = this.series[serieIdx].yOrientation;
+      console.log('serieOrientation', serieOrientation);
       const size = this.getCrosshairCircleBackgroundSize(serieIdx);
       const colorFormatter = this.series[serieIdx].colorFormatter;
-      this.crosshair.selectAll(`.crosshair-point-${_.last(datapoint)}`)
+      this.crosshair.selectAll(`.crosshair-point-${serieIdx}`)
         .attr('cx', this.xScale(datapoint[1]))
-        .attr('cy', this.yScale(datapoint[0]))
+        .attr('cy', this.getYScale(serieOrientation)(datapoint[0]))
         .attr('x', this.xScale(datapoint[1]) - size / 2)
-        .attr('y', this.yScale(datapoint[0]) - size / 2)
+        .attr('y', this.getYScale(serieOrientation)(datapoint[0]) - size / 2)
         .attr('fill', colorFormatter !== undefined ? colorFormatter(datapoint) : this.series[serieIdx].color)
         .style('display', null);
     }
@@ -241,6 +258,20 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       .attr('y2', this.height).attr('x2', x);
   }
 
+  protected getYScale(orientation: yAxisOrientation): d3.ScaleLinear<number, number> {
+    if(orientation === undefined || orientation === yAxisOrientation.BOTH) {
+      return this.yScale;
+    }
+    switch(orientation) {
+      case yAxisOrientation.LEFT:
+        return this.yScale;
+      case yAxisOrientation.RIGHT:
+        return this.y1Scale;
+      default:
+        throw new Error(`Unknown type of y axis orientation: ${orientation}`)   
+    }
+  }
+
   public hideSharedCrosshair(): void {
     this.crosshair.style('display', 'none');
   }
@@ -262,9 +293,9 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       .attr('y1', eventY)
       .attr('y2', eventY);
 
-    const foundItems = this._voronoiDiagram.find(eventX, eventY, this._voronoiRadius);
+    const foundItems = this.findItemsByVoronoi(eventX, eventY);
     let highlighted = null;
-    if(foundItems === null || foundItems.data === undefined) {
+    if(foundItems === undefined || foundItems === null || foundItems.data === undefined) {
       this.unhighlight();
     } else {
       this.highlight(foundItems.data);
@@ -289,6 +320,20 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     });
   }
 
+  findItemsByVoronoi(eventX, eventY): any | undefined {
+    // TODO: not any
+    let foundItemsY;
+    if(this._voronoiDiagramY !== undefined) {
+      foundItemsY = this._voronoiDiagramY.find(eventX, eventY, this._voronoiRadius);
+    }
+    let foundItemsY1;
+    if(this._voronoiDiagramY1 !== undefined) {
+      foundItemsY1 = this._voronoiDiagramY1.find(eventX, eventY, this._voronoiRadius);
+    }
+    // console.log('findItemsByVoronoi', foundItemsY1);
+    return foundItemsY || foundItemsY1;
+  }
+
   onMouseOver(): void {
     if(this.isOutOfChart() === true || this.isPanning === true || this.isBrushing === true) {
       this.crosshair.style('display', 'none');
@@ -304,14 +349,45 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     this.crosshair.style('display', 'none');
   }
 
-  getAllDatapoints(): number[][] {
-    const datapointsList = _.map(this.series, (serie, idx) => {
-      const datapointsWithSerieIdx = _.map(serie.datapoints, row => _.concat(row, idx));
+  getAllDatapointsY(): number[][] | undefined {
+    const seriesForY = this.series.filter(serie => this.filterSeriesByOrientation(serie.yOrientation, yAxisOrientation.LEFT));
+    if(seriesForY.length === 0) {
+      return undefined; // to avoid ts error
+    }
+    return this.concatSeriesDatapoints(seriesForY);
+  }
+
+  filterSeriesByOrientation(serieOrientation: yAxisOrientation, orientation: yAxisOrientation): boolean {
+    if(serieOrientation === undefined || serieOrientation === yAxisOrientation.BOTH) {
+      return true;
+    }
+    return serieOrientation === orientation;
+  }
+
+  getAllDatapointsY1(): number[][] | undefined {
+    const seriesForY1 = this.series.filter(serie => serie.yOrientation === yAxisOrientation.RIGHT);
+    if(seriesForY1.length === 0) {
+      return undefined; // to avoid ts error
+    }
+    return this.concatSeriesDatapoints(seriesForY1);
+  }
+
+  concatSeriesDatapoints(series: ScatterData[]): number[][] {
+    const datapointsList = _.map(series, serie => {
+      const serieIdx = this.getSerieIdxByTarget(serie.target);
+      const datapointsWithSerieIdx = _.map(serie.datapoints, row => _.concat(row, serieIdx));
       return datapointsWithSerieIdx;
     });
-    // TODO: fix types
     // @ts-ignore
     return _.concat(...datapointsList);
+  }
+
+  getSerieIdxByTarget(target: string): number {
+    const idx = _.findIndex(this.series, serie => serie.target === target);
+    if(idx === -1) {
+      throw new Error(`Can't find serie with target: ${target}`);
+    }
+    return idx;
   }
 }
 
