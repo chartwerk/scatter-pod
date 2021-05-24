@@ -1,4 +1,4 @@
-import { ChartwerkPod, VueChartwerkPodMixin, TickOrientation, TimeFormat, yAxisOrientation } from '@chartwerk/core';
+import { ChartwerkPod, VueChartwerkPodMixin, TickOrientation, TimeFormat, yAxisOrientation, CrosshairOrientation } from '@chartwerk/core';
 import { ScatterData, ScatterOptions, PointType, LineType, ColorFormatter } from './types';
 
 import * as d3 from 'd3';
@@ -246,15 +246,66 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     return seriePointSize + highlightDiameter;
   }
 
-  public renderSharedCrosshair(timestamp: number): void {
-    this.crosshair.style('display', null);
-    this.crosshair.selectAll('.crosshair-point')
-      .style('display', 'none');
+  public renderSharedCrosshair(values: { x?: number, y?: number }): void {
+    this.onMouseOver(); // TODO: refactor to use it once
+    const eventX = this.xScale(values.x);
+    const eventY = this.yScale(values.y);
+    this.moveCrosshairLine(eventX, eventY);
+    const datapoints = this.findAndHighlightDatapoints(values.x, values.y);
 
-    const x = this.xScale(timestamp);
-    this.crosshair.select('#crosshair-line-x')
-      .attr('y1', 0).attr('x1', x)
-      .attr('y2', this.height).attr('x2', x);
+    if(this.options.eventsCallbacks === undefined || this.options.eventsCallbacks.sharedCrosshairMove === undefined) {
+      console.log('Shared crosshair move, but there is no callback');
+      return;
+    }
+
+    this.options.eventsCallbacks.sharedCrosshairMove({
+      datapoints,
+      eventX, eventY
+    });
+  }
+
+  moveCrosshairLine(xPosition: number, yPosition: number): void {
+    switch (this.options.crosshair.orientation) {
+      case CrosshairOrientation.VERTICAL:
+        this.crosshair.select('#crosshair-line-x')
+          .attr('x1', xPosition)
+          .attr('x2', xPosition);
+        return;
+      case CrosshairOrientation.HORIZONTAL:
+        this.crosshair.select('#crosshair-line-y')
+          .attr('y1', yPosition)
+          .attr('y2', yPosition);
+        return;
+      case CrosshairOrientation.BOTH:
+        this.crosshair.select('#crosshair-line-x')
+          .attr('x1', xPosition)
+          .attr('x2', xPosition);
+        this.crosshair.select('#crosshair-line-y')
+          .attr('y1', yPosition)
+          .attr('y2', yPosition);
+        return;
+      default:
+        throw new Error(`Unknown type of crosshair orientaion: ${this.options.crosshair.orientation}`);
+    }
+  }
+
+  findAndHighlightDatapoints(eventX: number, eventY: number): { value: [number, number], color: string, label: string }[] | null {
+    // return: array of higlighted points or null
+    if(this.series === undefined || this.series.length === 0) {
+      return [];
+    }
+    const foundItems = this.findItemsByVoronoi(eventX, eventY);
+    let highlighted = null;
+    if(foundItems === undefined || foundItems === null || foundItems.data === undefined) {
+      this.unhighlight();
+    } else {
+      this.highlight(foundItems.data);
+      highlighted = {
+        pointIdx: foundItems.index,
+        values: foundItems.data
+      }
+    }
+    return highlighted;
   }
 
   protected getYScale(orientation: yAxisOrientation): d3.ScaleLinear<number, number> {
@@ -285,24 +336,10 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     } else {
       this.crosshair.style('display', null);
     }
-    this.crosshair.select('#crosshair-line-x')
-      .attr('x1', eventX)
-      .attr('x2', eventX);
-    this.crosshair.select('#crosshair-line-y')
-      .attr('y1', eventY)
-      .attr('y2', eventY);
 
-    const foundItems = this.findItemsByVoronoi(eventX, eventY);
-    let highlighted = null;
-    if(foundItems === undefined || foundItems === null || foundItems.data === undefined) {
-      this.unhighlight();
-    } else {
-      this.highlight(foundItems.data);
-      highlighted = {
-        pointIdx: foundItems.index,
-        values: foundItems.data
-      }
-    }
+    this.moveCrosshairLine(eventX, eventY);
+
+    const highlighted = this.findAndHighlightDatapoints(eventX, eventY);
     if(this.options.eventsCallbacks === undefined || this.options.eventsCallbacks.mouseMove === undefined) {
       console.log('Mouse move, but there is no callback');
       return;
@@ -318,6 +355,8 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       chartWidth: this.width
     });
   }
+
+
 
   findItemsByVoronoi(eventX, eventY): any | undefined {
     // TODO: not any

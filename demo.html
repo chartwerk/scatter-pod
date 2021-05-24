@@ -53,15 +53,13 @@
             }
           },
           zoomEvents: {
-            brush: {
-              isActive: false,
-              keyEvent: 'main',
-              orientation: 'square'
+            mouse: {
+              pan: { isActive: true, orientation: 'both', keyEvent: 'main' },
+              zoom: { isActive: true, keyEvent: 'shift' },
             },
-            pan: {
-              isActive: true,
-              keyEvent: 'main',
-              orientation: 'both'
+            scroll: {
+              pan: { isActive: false },
+              zoom: { isActive: true, keyEvent: 'main' }
             }
           },
           crosshair: {
