@@ -8,6 +8,7 @@ export declare class ChartwerkScatterPod extends ChartwerkPod<ScatterData, Scatt
     _voronoiRadius: number;
     constructor(el: HTMLElement, _series?: ScatterData[], _options?: ScatterOptions);
     renderMetrics(): void;
+    protected get minWH(): number;
     protected renderClipPath(): void;
     protected renderCircleGrid(): void;
     protected moveAxesToCenter(): void;

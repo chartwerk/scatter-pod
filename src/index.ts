@@ -66,14 +66,19 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     this.renderCircleGrid();
   }
 
+  protected get minWH(): number {
+    // TOOD: move to core
+    return Math.min(this.width, this.height);
+  }
+
   protected renderClipPath(): void {
     // TODO: this method is overwrite super. add option for it
     this.clipPath = this.chartContainer.append('defs').append('SVG:clipPath')
       .attr('id', this.rectClipId)
       .append('circle')
-      .attr('r', this.width / 2)
-      .attr('cx', this.width / 2)
-      .attr('cy', this.height / 2);
+      .attr('r', this.minWH / 2)
+      .attr('cx', this.minWH / 2)
+      .attr('cy', this.minWH / 2);
   }
 
   protected renderCircleGrid(): void {
@@ -83,14 +88,15 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     this.chartContainer.selectAll('.grid').remove();
     this.chartContainer
       .append('g')
-      .attr('transform', `translate(0,${this.height})`)
+      .attr('transform', `translate(0,${this.minWH})`)
       .attr('class', 'grid')
       .append('circle')
-      .attr('r', this.width / 2)
-      .attr('cx', this.width / 2)
-      .attr('cy', -this.height / 2)
+      .attr('r', this.minWH / 2)
+      .attr('cx', this.minWH / 2)
+      .attr('cy', -this.minWH / 2)
       .style('stroke', 'gray')
-      .style('pointer-events', 'none');
+      .style('pointer-events', 'none')
+      .style('fill', 'none');
   }
 
   protected moveAxesToCenter(): void {
@@ -99,9 +105,9 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       return;
     } 
     this.chartContainer.select('#y-axis-container')
-      .style('transform', `translate(${this.width / 2}px, 0px)`);
+      .style('transform', `translate(${this.minWH / 2}px, 0px)`);
     this.chartContainer.select('#x-axis-container')
-      .style('transform', `translate(0px, ${this.height / 2}px)`);
+      .style('transform', `translate(0px, ${this.minWH / 2}px)`);
   }
 
   protected renderXAxis(): void {
