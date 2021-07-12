@@ -12,6 +12,7 @@ export declare class ChartwerkScatterPod extends ChartwerkPod<ScatterData, Scatt
     protected renderClipPath(): void;
     protected renderCircleGrid(): void;
     protected moveAxesToCenter(): void;
+    rescaleMetricAndAxis(event: d3.D3ZoomEvent<any, any>): void;
     protected renderXAxis(): void;
     protected updateCrosshair(): void;
     appendCrosshairPoints(): void;

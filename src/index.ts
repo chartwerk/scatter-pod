@@ -1,4 +1,4 @@
-import { ChartwerkPod, VueChartwerkPodMixin, TickOrientation, TimeFormat, yAxisOrientation, CrosshairOrientation } from '@chartwerk/core';
+import { ChartwerkPod, VueChartwerkPodMixin, TickOrientation, TimeFormat, yAxisOrientation, CrosshairOrientation, PanOrientation } from '@chartwerk/core';
 import { ScatterData, ScatterOptions, PointType, LineType, ColorFormatter } from './types';
 
 import * as d3 from 'd3';
@@ -103,11 +103,32 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     // TODO; it is only for circle scatter pod
     if(this.options.circleView !== true) {
       return;
-    } 
+    }
     this.chartContainer.select('#y-axis-container')
       .style('transform', `translate(${this.minWH / 2}px, 0px)`);
     this.chartContainer.select('#x-axis-container')
       .style('transform', `translate(0px, ${this.minWH / 2}px)`);
+  }
+
+  public rescaleMetricAndAxis(event: d3.D3ZoomEvent<any, any>): void {
+    // TODO: this method is overwrite super. remove duplicates
+    this.isPanning = true;
+    this.onMouseOut();
+
+    this.onPanningRescale(event);
+
+    const shouldClearState = false;
+    this.clearScaleCache(shouldClearState);
+    this.renderYAxis();
+    this.renderXAxis();
+
+    this.chartContainer.select('.metrics-rect')
+      .attr('transform', `translate(${this.state.transform.x},${this.state.transform.y}), scale(${this.state.transform.k})`);
+    // TODO: move metric-rect to core. Now it is in Pod
+    this.chartContainer.selectAll('.metric-el')
+      .attr('transform', `translate(${this.state.transform.x},${this.state.transform.y}), scale(${this.state.transform.k})`);
+
+    this.moveAxesToCenter();
   }
 
   protected renderXAxis(): void {
