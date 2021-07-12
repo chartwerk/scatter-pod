@@ -73,12 +73,22 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
 
   protected renderClipPath(): void {
     // TODO: this method is overwrite super. add option for it
+    if(this.options.circleView) {
+      this.clipPath = this.chartContainer.append('defs').append('SVG:clipPath')
+        .attr('id', this.rectClipId)
+        .append('circle')
+        .attr('r', this.minWH / 2)
+        .attr('cx', this.minWH / 2)
+        .attr('cy', this.minWH / 2);
+      return;
+    }
     this.clipPath = this.chartContainer.append('defs').append('SVG:clipPath')
       .attr('id', this.rectClipId)
-      .append('circle')
-      .attr('r', this.minWH / 2)
-      .attr('cx', this.minWH / 2)
-      .attr('cy', this.minWH / 2);
+      .append('SVG:rect')
+      .attr('width', this.width)
+      .attr('height', this.height)
+      .attr('x', 0)
+      .attr('y', 0);
   }
 
   protected renderCircleGrid(): void {
