@@ -62,6 +62,65 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       );
     }
     this.voronoiDiagramInit();
+    this.moveAxesToCenter();
+    this.renderCircleGrid();
+  }
+
+  protected renderClipPath(): void {
+    // TODO: this method is overwrite super. add option for it
+    this.clipPath = this.chartContainer.append('defs').append('SVG:clipPath')
+      .attr('id', this.rectClipId)
+      .append('circle')
+      .attr('r', this.width / 2)
+      .attr('cx', this.width / 2)
+      .attr('cy', this.height / 2);
+  }
+
+  protected renderCircleGrid(): void {
+    if(this.options.renderGrid === false || this.options.circleView !== true) {
+      return;
+    }
+    this.chartContainer.selectAll('.grid').remove();
+    this.chartContainer
+      .append('g')
+      .attr('transform', `translate(0,${this.height})`)
+      .attr('class', 'grid')
+      .append('circle')
+      .attr('r', this.width / 2)
+      .attr('cx', this.width / 2)
+      .attr('cy', -this.height / 2)
+      .style('stroke', 'gray')
+      .style('pointer-events', 'none');
+  }
+
+  protected moveAxesToCenter(): void {
+    // TODO; it is only for circle scatter pod
+    if(this.options.circleView !== true) {
+      return;
+    } 
+    this.chartContainer.select('#y-axis-container')
+      .style('transform', `translate(${this.width / 2}px, 0px)`);
+    this.chartContainer.select('#x-axis-container')
+      .style('transform', `translate(0px, ${this.height / 2}px)`);
+  }
+
+  protected renderXAxis(): void {
+    if(this.options.axis.x.isActive === false) {
+      return;
+    }
+    this.chartContainer.select('#x-axis-container').remove();
+    this.xAxisElement = this.chartContainer
+      .append('g')
+      .attr('transform', `translate(0,${this.height})`)
+      .attr('id', 'x-axis-container')
+      .call(
+        this.d3.axisBottom(this.xScale)
+          .ticks(this.options.axis.x.ticksCount)
+          .tickSize(2)
+          .tickFormat(this.getAxisTicksFormatter(this.options.axis.x))
+      );
+    this.chartContainer.select('#x-axis-container').selectAll('.tick').selectAll('text')
+      .style('transform', this.xTickTransform);
   }
 
   protected updateCrosshair(): void {
@@ -207,6 +266,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     this.isPanning = false;
     this.onMouseOut();
     this.voronoiDiagramInit();
+    this.moveAxesToCenter();
     if(this.options.eventsCallbacks !== undefined && this.options.eventsCallbacks.panningEnd !== undefined) {
       this.options.eventsCallbacks.panningEnd([this.state.xValueRange, this.state.yValueRange, this.state.y1ValueRange]);
     } else {

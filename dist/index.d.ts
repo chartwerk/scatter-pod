@@ -8,6 +8,10 @@ export declare class ChartwerkScatterPod extends ChartwerkPod<ScatterData, Scatt
     _voronoiRadius: number;
     constructor(el: HTMLElement, _series?: ScatterData[], _options?: ScatterOptions);
     renderMetrics(): void;
+    protected renderClipPath(): void;
+    protected renderCircleGrid(): void;
+    protected moveAxesToCenter(): void;
+    protected renderXAxis(): void;
     protected updateCrosshair(): void;
     appendCrosshairPoints(): void;
     protected appendCrosshairPoint(serieIdx: number): void;
