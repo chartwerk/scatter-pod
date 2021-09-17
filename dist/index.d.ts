@@ -100,6 +100,7 @@ export declare const VueChartwerkScatterPodObject: {
             panning(range: any): void;
             contextMenu(evt: any): void;
             sharedCrosshairMove(event: any): void;
+            renderEnd(): void;
         };
     }[];
     methods: {

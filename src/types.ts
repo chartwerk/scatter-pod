@@ -10,6 +10,7 @@ type ScatterDataParams = {
 type ScatterOptionsParams = {
   voronoiRadius: number;
   circleView: boolean;
+  renderGrid: boolean;
 }
 export type ScatterData = TimeSerie & Partial<ScatterDataParams>;
 export type ScatterOptions = Options & Partial<ScatterOptionsParams>;
