@@ -5,8 +5,13 @@ declare type ScatterDataParams = {
     pointSize: number;
     colorFormatter?: ColorFormatter;
 };
+declare type ScatterOptionsParams = {
+    voronoiRadius: number;
+    circleView: boolean;
+    renderGrid: boolean;
+};
 export declare type ScatterData = TimeSerie & Partial<ScatterDataParams>;
-export declare type ScatterOptions = Options;
+export declare type ScatterOptions = Options & Partial<ScatterOptionsParams>;
 export declare enum PointType {
     NONE = "none",
     CIRCLE = "circle",

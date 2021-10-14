@@ -38,7 +38,7 @@
             color: 'purple',
             colorFormatter: d => d[2] === 0 ? 'red' : 'green',
             pointType: 'rectangle',
-            pointSize: 11
+            pointSize: 11,
           }
         ],
         {
@@ -49,19 +49,17 @@
             },
             y: {
               invert: true,
-              range: [-50, 250]
+              range: [-100, 250]
             }
           },
           zoomEvents: {
-            brush: {
-              isActive: true,
-              keyEvent: 'main',
-              orientation: 'square'
+            mouse: {
+              pan: { isActive: false, orientation: 'both', keyEvent: 'main' },
+              zoom: { isActive: true, keyEvent: 'shift' },
             },
-            pan: {
-              isActive: false,
-              keyEvent: 'main',
-              orientation: 'both'
+            scroll: {
+              pan: { isActive: false },
+              zoom: { isActive: true, keyEvent: 'main' }
             }
           },
           crosshair: {
@@ -74,7 +72,9 @@
           },
           eventsCallbacks: {
             zoomOut: () => { pod.render() }
-          }
+          },
+          margin: { top: 30, right: 30, bottom: 40, left: 30 },
+          circleView: true,
         }
       );
       pod.render();
