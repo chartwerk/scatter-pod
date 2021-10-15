@@ -272,10 +272,14 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
   }
 
   unhighlight(): void {
+    
     this.crosshair.selectAll('.crosshair-point').style('display', 'none');
+    console.log('unhighlight', this.crosshair.selectAll('.crosshair-point'))
   }
 
   highlight(pointIdx: number) {
+    this.unhighlight();
+
     const datapoint = this._delaunayData[pointIdx];
     if(datapoint !== undefined && datapoint !== null) {
       const serieIdx = datapoint[3];
@@ -412,6 +416,9 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
   }
 
   findPointIndexByDelaunay(eventX, eventY): number | undefined {
+    if(!this._delaunayDiagram) {
+      return undefined;
+    }
     const pointIndex = this._delaunayDiagram.find(eventX, eventY);
     if(pointIndex === -1) {
       return undefined;
@@ -437,7 +444,8 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
   getDatapointsForDelaunay(): number[][] | undefined {
     // here we union all datapoints with point render type(circle or rectangle)
     // it means that circles and rectangles will be highlighted(not lines)
-    const seriesForPointType = this.series.filter((serie: ScatterData) => serie.pointType === PointType.CIRCLE || serie.pointType === PointType.RECTANGLE);
+    const seriesForPointType = this.series.filter((serie: ScatterData) => serie.pointType !== PointType.NONE);
+    console.log('seriesForPointType', seriesForPointType);
     if(seriesForPointType.length === 0) {
       return undefined; // to avoid ts error
     }
