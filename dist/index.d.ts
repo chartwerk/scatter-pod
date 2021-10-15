@@ -3,11 +3,10 @@ import { ScatterData, ScatterOptions, PointType, LineType, ColorFormatter } from
 import * as d3 from 'd3';
 export declare class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOptions> {
     _metricsContainer: any;
-    _voronoiDiagramY: any;
-    _voronoiDiagramY1: any;
-    _voronoiRadius: number;
     _delaunayDiagram: any;
+    _delaunayDiagramY1: any;
     _delaunayData: any[][];
+    _delaunayDataY1: any[][];
     constructor(el: HTMLElement, _series?: ScatterData[], _options?: ScatterOptions);
     renderMetrics(): void;
     rescaleMetricAndAxis(event: d3.D3ZoomEvent<any, any>): void;
@@ -38,17 +37,19 @@ export declare class ChartwerkScatterPod extends ChartwerkPod<ScatterData, Scatt
     }): void;
     moveCrosshairLine(xPosition: number, yPosition: number): void;
     findAndHighlightDatapoints(eventX: number, eventY: number): {
-        pointIdx: [number, number];
-        color: string;
-        label: string;
-    }[] | null;
+        values: any[];
+        pointIdx: number;
+    } | null;
     protected getYScale(orientation: yAxisOrientation): d3.ScaleLinear<number, number>;
     hideSharedCrosshair(): void;
     onMouseMove(): void;
     findPointIndexByDelaunay(eventX: any, eventY: any): number | undefined;
     onMouseOver(): void;
     onMouseOut(): void;
-    getDatapointsForDelaunay(): number[][] | undefined;
+    getDatapointsForDelaunay(series: ScatterData[]): number[][] | undefined;
+    getDatapointsForDelaunayY(): number[][] | undefined;
+    getDatapointsForDelaunayY1(): number[][] | undefined;
+    getAllDatapointsY(): number[][] | undefined;
     filterSeriesByOrientation(serieOrientation: yAxisOrientation, orientation: yAxisOrientation): boolean;
     concatSeriesDatapoints(series: ScatterData[]): any[][];
     getSerieIdxByTarget(target: string): number;
