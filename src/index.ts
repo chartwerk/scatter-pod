@@ -352,13 +352,12 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       return null;
     }
     const pointIndex = this.findPointIndexByDelaunay(eventX, eventY);
-    console.log('point', pointIndex);
     if(pointIndex === undefined) {
       this.unhighlight();
       return null;
     }
     this.highlight(pointIndex);
-    console.log('values', this._delaunayData[pointIndex]);
+
     return {
       values: this._delaunayData[pointIndex],
       pointIdx: pointIndex,
