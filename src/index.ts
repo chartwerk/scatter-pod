@@ -359,11 +359,9 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     if(pointIndex === undefined) {
       this.unhighlight();
       return [];
-    } else {
-      this.highlight(pointIndex);
     }
-
-    return undefined;
+    this.highlight(pointIndex);
+    return this._delaunayData[pointIndex];
   }
 
   protected getYScale(orientation: yAxisOrientation): d3.ScaleLinear<number, number> {
@@ -409,7 +407,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       y: this.d3.event.clientY,
       xval: this.xScale.invert(eventX),
       yval: this.xScale.invert(eventY),
-      highlighted,
+      highlighted: { values: highlighted },
       chartX: eventX,
       chartWidth: this.width
     });
