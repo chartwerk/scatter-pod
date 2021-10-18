@@ -1,32 +1,20 @@
 import { ChartwerkPod, TickOrientation, TimeFormat, yAxisOrientation } from '@chartwerk/core';
-import { ScatterData, ScatterOptions, PointType, LineType, ColorFormatter } from './types';
+import { ScatterData, ScatterOptions, PointType, LineType } from './types';
+import { DelaunayDiagram } from './delaunay';
 import * as d3 from 'd3';
 export declare class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOptions> {
     _metricsContainer: any;
-    _delaunayDiagram: any;
-    _delaunayDiagramY1: any;
-    _delaunayData: any[][];
-    _delaunayDataY1: any[][];
+    _delaunayDiagram: DelaunayDiagram;
     constructor(el: HTMLElement, _series?: ScatterData[], _options?: ScatterOptions);
     renderMetrics(): void;
+    renderMetricConatiner(): void;
     rescaleMetricAndAxis(event: d3.D3ZoomEvent<any, any>): void;
-    protected renderXAxis(): void;
     protected updateCrosshair(): void;
     appendCrosshairPoints(): void;
     protected appendCrosshairPoint(serieIdx: number): void;
-    protected renderLines(datapoints: number[][], metricOptions: {
-        color: string;
-        colorFormatter: ColorFormatter;
-        target: string;
-        pointType: PointType;
-        lineType: LineType;
-        pointSize: number;
-        orientation: yAxisOrientation;
-    }): void;
+    protected renderLines(): void;
     renderLine(datapoints: number[][], lineType: LineType, color: string, orientation: yAxisOrientation): void;
-    protected renderAllPoints(): void;
-    protected renderPoints(datapoints: number[][], pointType: PointType, pointSize: number, color: string | ColorFormatter, orientation: yAxisOrientation, serieIdx: number): void;
-    protected delaunayDiagramInit(): void;
+    protected renderPoints(): void;
     onPanningEnd(): void;
     unhighlight(): void;
     highlight(pointIdx: number): void;
@@ -43,16 +31,8 @@ export declare class ChartwerkScatterPod extends ChartwerkPod<ScatterData, Scatt
     protected getYScale(orientation: yAxisOrientation): d3.ScaleLinear<number, number>;
     hideSharedCrosshair(): void;
     onMouseMove(): void;
-    findPointIndexByDelaunay(eventX: any, eventY: any): number | undefined;
     onMouseOver(): void;
     onMouseOut(): void;
-    getDatapointsForDelaunay(series: ScatterData[]): number[][] | undefined;
-    getDatapointsForDelaunayY(): number[][] | undefined;
-    getDatapointsForDelaunayY1(): number[][] | undefined;
-    getAllDatapointsY(): number[][] | undefined;
-    filterSeriesByOrientation(serieOrientation: yAxisOrientation, orientation: yAxisOrientation): boolean;
-    concatSeriesDatapoints(series: ScatterData[]): any[][];
-    getSerieIdxByTarget(target: string): number;
 }
 export declare const VueChartwerkScatterPodObject: {
     render(createElement: any): any;

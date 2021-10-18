@@ -15,8 +15,6 @@ export class DelaunayDiagram {
       xScale: d3.ScaleLinear<number, number>, yScale: (string) => d3.ScaleLinear<number, number>, // TODO: bad, but idk how to do it better
     ) {
     this._delaunayData = this.getDatapointsForDelaunay();
-    console.log('this._delaunayData', this._delaunayData);
-    console.log('scales', yScale);
     this.setDelaunayDiagram(xScale, yScale);
   }
 
@@ -74,11 +72,10 @@ export class DelaunayDiagram {
     // return type row: [ 0:y, 1:x, 2?:custom value, last:serieIdx ]
     const datapointsList = _.map(series, serie => {
       const serieIdx = this.getSerieIdxByTarget(serie.target);
-      const datapointsWithOptions = _.map(serie.datapoints, row => _.concat(...row, serieIdx));
+      const datapointsWithOptions = _.map(serie.datapoints, row => _.concat(row, serieIdx));
       return datapointsWithOptions;
     });
-    // @ts-ignore
-    return _.concat(...datapointsList);
+    return _.union(...datapointsList);
   }
 
   protected getSerieIdxByTarget(target: string): number {
