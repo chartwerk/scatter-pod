@@ -64,9 +64,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
         }
       );
     }
-    this._delaunayData = this.getDatapointsForDelaunayY();
-    // TODO: temporary hack
-    this._delaunayDataY1 = this.getDatapointsForDelaunayY1();
+    this._delaunayData = this.getDatapointsForDelaunay();
     this.renderAllPoints();
     this.delaunayDiagramInit();
   }
@@ -246,16 +244,9 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       this._delaunayDiagram = Delaunay.from(
         this._delaunayData,
         d => this.xScale(d[1]),
-        d => this.yScale(d[0])
+        d => this.getYScale(d[8])(d[0])
       );
       console.timeEnd('delaunay-init');
-    }
-    if(this._delaunayDataY1) {
-      this._delaunayDiagram = Delaunay.from(
-        this._delaunayDataY1,
-        d => this.xScale(d[1]),
-        d => this.y1Scale(d[0])
-      );
     }
   }
 
@@ -356,6 +347,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       this.unhighlight();
       return null;
     }
+    console.log('pointIndex', pointIndex)
     this.highlight(pointIndex);
 
     return {
@@ -419,16 +411,10 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     }
     let pointIndex = this._delaunayDiagram.find(eventX, eventY);
     if(pointIndex === -1) {
-      return pointIndex = undefined;
+      pointIndex = undefined;
     }
-    let pointIndexy1;
-    if(this._delaunayDiagramY1) {
-      pointIndexy1 = this._delaunayDiagramY1.find(eventX, eventY);
-      if(pointIndexy1 === -1) {
-        pointIndexy1 = undefined;
-      }
-    }
-    return pointIndex || pointIndexy1;
+    // TODO: https://github.com/d3/d3-delaunay/issues/45
+    return pointIndex;
   }
 
   onMouseOver(): void {
@@ -446,39 +432,39 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     this.crosshair.style('display', 'none');
   }
 
-  getDatapointsForDelaunay(series: ScatterData[]): number[][] | undefined {
+  getDatapointsForDelaunay(): number[][] | undefined {
     // here we union all datapoints with point render type(circle or rectangle)
     // it means that circles and rectangles will be highlighted(not lines)
-    const seriesForPointType = series.filter((serie: ScatterData) => serie.pointType !== PointType.NONE);
+    const seriesForPointType = this.series.filter((serie: ScatterData) => serie.pointType !== PointType.NONE);
     if(seriesForPointType.length === 0) {
       return undefined; // to avoid ts error
     }
     return this.concatSeriesDatapoints(seriesForPointType);
   }
 
-  getDatapointsForDelaunayY(): number[][] | undefined {
-    const seriesForY = this.series.filter(serie => this.filterSeriesByOrientation(serie.yOrientation, yAxisOrientation.LEFT));
-    if(seriesForY.length === 0) {
-      return undefined; // to avoid ts error
-    }
-    return this.getDatapointsForDelaunay(seriesForY);
-  }
+  // getDatapointsForDelaunayY(): number[][] | undefined {
+  //   const seriesForY = this.series.filter(serie => this.filterSeriesByOrientation(serie.yOrientation, yAxisOrientation.LEFT));
+  //   if(seriesForY.length === 0) {
+  //     return undefined; // to avoid ts error
+  //   }
+  //   return this.getDatapointsForDelaunay(seriesForY);
+  // }
 
-  getDatapointsForDelaunayY1(): number[][] | undefined {
-    const seriesForY1 = this.series.filter(serie => serie.yOrientation === yAxisOrientation.RIGHT);
-    if(seriesForY1.length === 0) {
-      return undefined; // to avoid ts error
-    }
-    return this.getDatapointsForDelaunay(seriesForY1);
-  }
+  // getDatapointsForDelaunayY1(): number[][] | undefined {
+  //   const seriesForY1 = this.series.filter(serie => serie.yOrientation === yAxisOrientation.RIGHT);
+  //   if(seriesForY1.length === 0) {
+  //     return undefined; // to avoid ts error
+  //   }
+  //   return this.getDatapointsForDelaunay(seriesForY1);
+  // }
 
-  getAllDatapointsY(): number[][] | undefined {
-    const seriesForY = this.series.filter(serie => this.filterSeriesByOrientation(serie.yOrientation, yAxisOrientation.LEFT));
-    if(seriesForY.length === 0) {
-      return undefined; // to avoid ts error
-    }
-    return this.concatSeriesDatapoints(seriesForY);
-  }
+  // getAllDatapointsY(): number[][] | undefined {
+  //   const seriesForY = this.series.filter(serie => this.filterSeriesByOrientation(serie.yOrientation, yAxisOrientation.LEFT));
+  //   if(seriesForY.length === 0) {
+  //     return undefined; // to avoid ts error
+  //   }
+  //   return this.concatSeriesDatapoints(seriesForY);
+  // }
 
   filterSeriesByOrientation(serieOrientation: yAxisOrientation, orientation: yAxisOrientation): boolean {
     if(serieOrientation === undefined || serieOrientation === yAxisOrientation.BOTH) {
