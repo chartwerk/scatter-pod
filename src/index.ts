@@ -1,7 +1,7 @@
 import { ChartwerkPod, VueChartwerkPodMixin, TickOrientation, TimeFormat, yAxisOrientation, CrosshairOrientation, PanOrientation } from '@chartwerk/core';
 import { ScatterData, ScatterOptions, PointType, LineType, ColorFormatter } from './types';
 
-import { Delaunay } from 'd3-delaunay';
+import { DelaunayDiagram } from './delaunay';
 
 import * as d3 from 'd3';
 import * as _ from 'lodash';
@@ -16,8 +16,7 @@ const DEFAULT_LINE_DASHED_AMOUNT = 4;
 
 export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOptions> {
   _metricsContainer: any;
-  _delaunayDiagram: any;
-  _delaunayData: number[][]; // [ 0:y, 1:x, ..., last:serieIdx ][]
+  _delaunayDiagram: DelaunayDiagram;
 
   constructor(el: HTMLElement, _series: ScatterData[] = [], _options: ScatterOptions = {}) {
     super(d3, el, _series, _options);
@@ -28,8 +27,16 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       this.renderNoDataPointsMessage();
       return;
     }
-    this.updateCrosshair();
+    this.updateCrosshair();    
+    this.renderMetricConatiner();
 
+    this._delaunayDiagram = new DelaunayDiagram(this.series, this.xScale, this.getYScale.bind(this));
+
+    this.renderLines();
+    this.renderPoints();
+  }
+
+  renderMetricConatiner(): void {
     // container for clip path
     const clipContatiner = this.chartContainer
       .append('g')
@@ -38,33 +45,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     // container for panning
     this._metricsContainer = clipContatiner
       .append('g')
-      .attr('class', ' metrics-rect')
-
-    for(let idx = 0; idx < this.series.length; ++idx) {
-      if(this.series[idx].visible === false) {
-        continue;
-      }
-      const target = this.series[idx].target;
-      const pointType = this.series[idx].pointType || DEFAULT_POINT_TYPE;
-      const lineType = this.series[idx].lineType || DEFAULT_LINE_TYPE;
-      const pointSize = this.series[idx].pointSize || DEFAULT_POINT_SIZE;
-      const orientation = this.series[idx].yOrientation;
-      this.renderLines(
-        this.series[idx].datapoints,
-        {
-          color: this.getSerieColor(idx),
-          colorFormatter: this.series[idx].colorFormatter,
-          target,
-          pointType,
-          lineType,
-          pointSize,
-          orientation,
-        }
-      );
-    }
-    this._delaunayData = this.getDatapointsForDelaunay();
-    this.renderAllPoints();
-    this.delaunayDiagramInit();
+      .attr('class', ' metrics-rect');
   }
 
   public rescaleMetricAndAxis(event: d3.D3ZoomEvent<any, any>): void {
@@ -84,25 +65,6 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     // TODO: move metric-rect to core. Now it is in Pod
     this.chartContainer.selectAll('.metric-el')
       .attr('transform', `translate(${this.state.transform.x},${this.state.transform.y}), scale(${this.state.transform.k})`);
-  }
-
-  protected renderXAxis(): void {
-    if(this.options.axis.x.isActive === false) {
-      return;
-    }
-    this.chartContainer.select('#x-axis-container').remove();
-    this.xAxisElement = this.chartContainer
-      .append('g')
-      .attr('transform', `translate(0,${this.height})`)
-      .attr('id', 'x-axis-container')
-      .call(
-        this.d3.axisBottom(this.xScale)
-          .ticks(this.options.axis.x.ticksCount)
-          .tickSize(2)
-          .tickFormat(this.getAxisTicksFormatter(this.options.axis.x))
-      );
-    this.chartContainer.select('#x-axis-container').selectAll('.tick').selectAll('text')
-      .style('transform', this.xTickTransform);
   }
 
   protected updateCrosshair(): void {
@@ -146,20 +108,14 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     }
   }
 
-  protected renderLines(
-    datapoints: number[][],
-    metricOptions: {
-      color: string,
-      colorFormatter: ColorFormatter,
-      target: string,
-      pointType: PointType,
-      lineType: LineType,
-      pointSize: number,
-      orientation: yAxisOrientation
-    }
-  ): void {
-    // this.renderPoints(datapoints, metricOptions.pointType, metricOptions.pointSize, metricOptions.colorFormatter || metricOptions.color, metricOptions.orientation, serieIdx);
-    this.renderLine(datapoints, metricOptions.lineType, metricOptions.color, metricOptions.orientation);
+  protected renderLines(): void {
+    this.series.forEach((serie, serieIdx) => {
+      if(serie.visible === false) {
+        return;
+      }
+      const lineType = serie.lineType || DEFAULT_LINE_TYPE;
+      this.renderLine(serie.datapoints, lineType, this.getSerieColor(serieIdx), serie.yOrientation);
+    });
   }
 
   renderLine(datapoints: number[][], lineType: LineType, color: string, orientation: yAxisOrientation): void {
@@ -188,13 +144,13 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       .attr('d', lineGenerator);
   }
 
-  protected renderAllPoints(): void {
-    if(!this._delaunayData || this._delaunayData.length === 0) {
+  protected renderPoints(): void {
+    if(!this._delaunayDiagram.data) {
       return;
     }
 
     this._metricsContainer.selectAll(null)
-      .data(this._delaunayData)
+      .data(this._delaunayDiagram.data)
       .enter()
       .append('circle')
       .attr('class', (d, i: number) => `metric-element metric-circle point-${i}`)
@@ -203,60 +159,26 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       .style('pointer-events', 'none')
       .attr('cx', (d: any[]) => this.xScale(d[1]))
       .attr('cy', (d: any[]) => this.getYScale(this.series[_.last(d)].yOrientation)(d[0]));
-  }
 
-  protected renderPoints(datapoints: number[][], pointType: PointType, pointSize: number, color: string | ColorFormatter, orientation: yAxisOrientation, serieIdx: number): void {
-    switch(pointType) {
-      case PointType.NONE:
-        return;
-      case PointType.CIRCLE:
-        this._metricsContainer.selectAll(null)
-          .data(datapoints)
-          .enter()
-          .append('circle')
-          .attr('class', (d, i: number) => `metric-element metric-circle point-${1}`)
-          .attr('r', pointSize)
-          .style('fill', color)
-          .style('pointer-events', 'none')
-          .attr('cx', (d: [number, number]) => this.xScale(d[1]))
-          .attr('cy', (d: [number, number]) => this.getYScale(orientation)(d[0]));
-        return;
-      case PointType.RECTANGLE:
-        this._metricsContainer.selectAll(null)
-          .data(datapoints)
-          .enter()
-          .append('rect')
-          .attr('class', `metric-element metric-rect`)
-          .style('fill', color)
-          .style('pointer-events', 'none')
-          .attr('x', (d: [number, number]) => this.xScale(d[1]) - pointSize / 2)
-          .attr('y', (d: [number, number]) => this.getYScale(orientation)(d[0]) - pointSize / 2)
-          .attr('width', pointSize)
-          .attr('height', pointSize);
-          return;
-      default:
-        throw new Error(`Unknown render point type: ${pointType}`);
-    }
-  }
-
-  protected delaunayDiagramInit(): void {
-    if(!this._delaunayData) {
-      console.warn('No data for delaunay initialization');
-      return;
-    }
-    console.time('delaunay-init');
-    this._delaunayDiagram = Delaunay.from(
-      this._delaunayData,
-      (d: number[]) => this.xScale(d[1]),
-      (d: number[]) => this.getYScale(this.series[_.last(d)].yOrientation)(d[0])
-    );
-    console.timeEnd('delaunay-init');
+    // TODO: add rectangle
+    // case PointType.RECTANGLE:
+    // this._metricsContainer.selectAll(null)
+    //   .data(datapoints)
+    //   .enter()
+    //   .append('rect')
+    //   .attr('class', `metric-element metric-rect`)
+    //   .style('fill', color)
+    //   .style('pointer-events', 'none')
+    //   .attr('x', (d: [number, number]) => this.xScale(d[1]) - pointSize / 2)
+    //   .attr('y', (d: [number, number]) => this.getYScale(orientation)(d[0]) - pointSize / 2)
+    //   .attr('width', pointSize)
+    //   .attr('height', pointSize);
   }
 
   onPanningEnd(): void {
     this.isPanning = false;
     this.onMouseOut();
-    this.delaunayDiagramInit();
+    this._delaunayDiagram.setDelaunayDiagram(this.xScale, this.getYScale.bind(this));
     if(this.options.eventsCallbacks !== undefined && this.options.eventsCallbacks.panningEnd !== undefined) {
       this.options.eventsCallbacks.panningEnd([this.state.xValueRange, this.state.yValueRange, this.state.y1ValueRange]);
     } else {
@@ -268,23 +190,25 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     this.crosshair.selectAll('.crosshair-point').style('display', 'none');
   }
 
-  highlight(pointIdx: number) {
+  highlight(pointIdx: number): void {
     this.unhighlight();
 
-    const datapoint = this._delaunayData[pointIdx];
-    if(datapoint !== undefined && datapoint !== null) {
-      const serieIdx = datapoint[3];
-      const serieOrientation = this.series[serieIdx].yOrientation;
-      const size = this.getCrosshairCircleBackgroundSize(serieIdx);
-      const colorFormatter = this.series[serieIdx].colorFormatter;
-      this.crosshair.selectAll(`.crosshair-point-${serieIdx}`)
-        .attr('cx', this.xScale(datapoint[1]))
-        .attr('cy', this.getYScale(serieOrientation)(datapoint[0]))
-        .attr('x', this.xScale(datapoint[1]) - size / 2)
-        .attr('y', this.getYScale(serieOrientation)(datapoint[0]) - size / 2)
-        .attr('fill', colorFormatter !== undefined ? colorFormatter(datapoint) : this.series[serieIdx].color)
-        .style('display', null);
+    const datapoint = this._delaunayDiagram.getDataRowByIndex(pointIdx);
+    if(datapoint === undefined || datapoint === null) {
+      return;
     }
+
+    const serieIdx = _.last(datapoint);
+    const serieOrientation = this.series[serieIdx].yOrientation;
+    const size = this.getCrosshairCircleBackgroundSize(serieIdx);
+    const colorFormatter = this.series[serieIdx].colorFormatter;
+    this.crosshair.selectAll(`.crosshair-point-${serieIdx}`)
+      .attr('cx', this.xScale(datapoint[1]))
+      .attr('cy', this.getYScale(serieOrientation)(datapoint[0]))
+      .attr('x', this.xScale(datapoint[1]) - size / 2)
+      .attr('y', this.getYScale(serieOrientation)(datapoint[0]) - size / 2)
+      .attr('fill', colorFormatter !== undefined ? colorFormatter(datapoint) : this.series[serieIdx].color)
+      .style('display', null);
   }
 
   protected getCrosshairCircleBackgroundSize(serieIdx: number): number {
@@ -341,20 +265,19 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
   }
 
   findAndHighlightDatapoints(eventX: number, eventY: number): { values: any[], pointIdx: number } | null {
-    // return: array of higlighted points or null
     if(this.series === undefined || this.series.length === 0) {
       return null;
     }
-    const pointIndex = this.findPointIndexByDelaunay(eventX, eventY);
+  
+    const pointIndex = this._delaunayDiagram.findPointIndex(eventX, eventY);
     if(pointIndex === undefined) {
       this.unhighlight();
       return null;
     }
-    console.log('pointIndex', pointIndex)
     this.highlight(pointIndex);
 
     return {
-      values: this._delaunayData[pointIndex],
+      values: this._delaunayDiagram.data[pointIndex],
       pointIdx: pointIndex,
     };
   }
@@ -410,18 +333,6 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     });
   }
 
-  findPointIndexByDelaunay(eventX, eventY): number | undefined {
-    if(!this._delaunayDiagram) {
-      return undefined;
-    }
-    let pointIndex = this._delaunayDiagram.find(eventX, eventY);
-    if(pointIndex === -1) {
-      pointIndex = undefined;
-    }
-    // TODO: add search radius via https://github.com/d3/d3-delaunay/issues/45
-    return pointIndex;
-  }
-
   onMouseOver(): void {
     if(this.isOutOfChart() === true || this.isPanning === true || this.isBrushing === true) {
       this.crosshair.style('display', 'none');
@@ -435,35 +346,6 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       this.options.eventsCallbacks.mouseOut();
     }
     this.crosshair.style('display', 'none');
-  }
-
-  getDatapointsForDelaunay(): number[][] | undefined {
-    // here we union all datapoints with point render type(circle or rectangle)
-    // it means that circles and rectangles will be highlighted(not lines)
-    const seriesForPointType = this.series.filter((serie: ScatterData) => serie.pointType !== PointType.NONE);
-    if(seriesForPointType.length === 0) {
-      return undefined; // to avoid ts error
-    }
-    return this.concatSeriesDatapoints(seriesForPointType);
-  }
-
-  concatSeriesDatapoints(series: ScatterData[]): number[][] {
-    // return type row: [ 0:y, 1:x, 2?:custom value, last:serieIdx ]
-    const datapointsList = _.map(series, serie => {
-      const serieIdx = this.getSerieIdxByTarget(serie.target);
-      const datapointsWithOptions = _.map(serie.datapoints, row => _.concat(...row, serieIdx));
-      return datapointsWithOptions;
-    });
-    // @ts-ignore
-    return _.concat(...datapointsList);
-  }
-
-  getSerieIdxByTarget(target: string): number {
-    const idx = _.findIndex(this.series, serie => serie.target === target);
-    if(idx === -1) {
-      throw new Error(`Can't find serie with target: ${target}`);
-    }
-    return idx;
   }
 }
 
