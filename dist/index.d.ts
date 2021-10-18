@@ -7,7 +7,7 @@ export declare class ChartwerkScatterPod extends ChartwerkPod<ScatterData, Scatt
     _delaunayDiagram: DelaunayDiagram;
     constructor(el: HTMLElement, _series?: ScatterData[], _options?: ScatterOptions);
     renderMetrics(): void;
-    renderMetricConatiner(): void;
+    renderMetricContainer(): void;
     protected updateCrosshair(): void;
     appendCrosshairPoints(): void;
     protected appendCrosshairPoint(serieIdx: number): void;

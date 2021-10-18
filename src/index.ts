@@ -28,7 +28,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       return;
     }
     this.updateCrosshair();    
-    this.renderMetricConatiner();
+    this.renderMetricContainer();
 
     this._delaunayDiagram = new DelaunayDiagram(this.series, this.xScale, this.getYScale.bind(this));
 
@@ -36,7 +36,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     this.renderPoints();
   }
 
-  renderMetricConatiner(): void {
+  renderMetricContainer(): void {
     // container for clip path
     const clipContatiner = this.chartContainer
       .append('g')
@@ -134,26 +134,27 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       .data(this._delaunayDiagram.data)
       .enter()
       .append('circle')
+      .filter((d: number[]) => this.series[_.last(d)].pointType !== PointType.RECTANGLE)
       .attr('class', (d, i: number) => `metric-element metric-circle point-${i}`)
       .attr('r', (d: number[]) => this.series[_.last(d)].pointSize || DEFAULT_POINT_SIZE)
       .style('fill', (d: number[]) => this.getSerieColor(_.last(d)))
       .style('pointer-events', 'none')
       .attr('cx', (d: any[]) => this.xScale(d[1]))
       .attr('cy', (d: any[]) => this.getYScale(this.series[_.last(d)].yOrientation)(d[0]));
-
-    // TODO: add rectangle
-    // case PointType.RECTANGLE:
-    // this._metricsContainer.selectAll(null)
-    //   .data(datapoints)
-    //   .enter()
-    //   .append('rect')
-    //   .attr('class', `metric-element metric-rect`)
-    //   .style('fill', color)
-    //   .style('pointer-events', 'none')
-    //   .attr('x', (d: [number, number]) => this.xScale(d[1]) - pointSize / 2)
-    //   .attr('y', (d: [number, number]) => this.getYScale(orientation)(d[0]) - pointSize / 2)
-    //   .attr('width', pointSize)
-    //   .attr('height', pointSize);
+  
+    this._metricsContainer.selectAll(null)
+      .data(this._delaunayDiagram.data)
+      .enter()
+      .append('rect')
+      .filter((d: number[]) => this.series[_.last(d)].pointType === PointType.RECTANGLE)
+      .attr('class', (d, i: number) => `metric-element metric-circle point-${i}`)
+      .attr('r', (d: number[]) => this.series[_.last(d)].pointSize || DEFAULT_POINT_SIZE)
+      .style('fill', (d: number[]) => this.getSerieColor(_.last(d)))
+      .style('pointer-events', 'none')
+      .attr('x', (d: number[]) => this.xScale(d[1]) - (this.series[_.last(d)].pointSize || DEFAULT_POINT_SIZE) / 2)
+      .attr('y', (d: number[]) => this.getYScale(this.series[_.last(d)].yOrientation)(d[0]) - (this.series[_.last(d)].pointSize || DEFAULT_POINT_SIZE) / 2)
+      .attr('width', (d: number[]) => this.series[_.last(d)].pointSize || DEFAULT_POINT_SIZE)
+      .attr('height', (d: number[]) => this.series[_.last(d)].pointSize || DEFAULT_POINT_SIZE);
   }
 
   onPanningEnd(): void {

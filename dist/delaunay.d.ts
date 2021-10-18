@@ -9,7 +9,7 @@ export declare class DelaunayDiagram {
     setDelaunayDiagram(xScale: d3.ScaleLinear<number, number>, yScale: (string: any) => d3.ScaleLinear<number, number>): void;
     findPointIndex(eventX: number, eventY: number): number | undefined;
     getDataRowByIndex(index: number): number[] | undefined;
-    protected getDatapointsForDelaunay(): number[][] | undefined;
-    protected concatSeriesDatapoints(series: ScatterData[]): number[][];
-    protected getSerieIdxByTarget(target: string): number;
+    private getDatapointsForDelaunay;
+    private concatSeriesDatapoints;
+    private getSerieIdxByTarget;
 }

@@ -58,9 +58,10 @@ export class DelaunayDiagram {
     return this.data[index];
   }
 
-  protected getDatapointsForDelaunay(): number[][] | undefined {
+  private getDatapointsForDelaunay(): number[][] | undefined {
     // here we union all datapoints with point render type(circle or rectangle)
     // it means that circles and rectangles will be highlighted(not lines)
+    // TODO: set Defaults (if pointType === undefined, Circle type will be used futher)
     const seriesForPointType = this.series.filter((serie: ScatterData) => serie.pointType !== PointType.NONE);
     if(seriesForPointType.length === 0) {
       return undefined; // to avoid ts error
@@ -68,7 +69,7 @@ export class DelaunayDiagram {
     return this.concatSeriesDatapoints(seriesForPointType);
   }
 
-  protected concatSeriesDatapoints(series: ScatterData[]): number[][] {
+  private concatSeriesDatapoints(series: ScatterData[]): number[][] {
     // return type row: [ 0:y, 1:x, 2?:custom value, last:serieIdx ]
     const datapointsList = _.map(series, serie => {
       const serieIdx = this.getSerieIdxByTarget(serie.target);
@@ -78,7 +79,7 @@ export class DelaunayDiagram {
     return _.union(...datapointsList);
   }
 
-  protected getSerieIdxByTarget(target: string): number {
+  private getSerieIdxByTarget(target: string): number {
     const idx = _.findIndex(this.series, serie => serie.target === target);
     if(idx === -1) {
       throw new Error(`Can't find serie with target: ${target}`);
