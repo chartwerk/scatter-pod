@@ -379,6 +379,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     const eventX = mousePosition[0];
     const eventY = mousePosition[1];
 
+    // TODO: seems isOutOfChart is deprecated (check clippath correctness)
     if(this.isOutOfChart() === true || this.isPanning === true || this.isBrushing === true) {
       this.crosshair.style('display', 'none');
       return;
@@ -388,6 +389,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
 
     this.moveCrosshairLine(eventX, eventY);
 
+    // TOOD: it should be two different methods
     const highlighted = this.findAndHighlightDatapoints(eventX, eventY);
     if(this.options.eventsCallbacks === undefined || this.options.eventsCallbacks.mouseMove === undefined) {
       console.log('Mouse move, but there is no callback');
@@ -413,7 +415,7 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
     if(pointIndex === -1) {
       pointIndex = undefined;
     }
-    // TODO: https://github.com/d3/d3-delaunay/issues/45
+    // TODO: add search radius via https://github.com/d3/d3-delaunay/issues/45
     return pointIndex;
   }
 
@@ -440,37 +442,6 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       return undefined; // to avoid ts error
     }
     return this.concatSeriesDatapoints(seriesForPointType);
-  }
-
-  // getDatapointsForDelaunayY(): number[][] | undefined {
-  //   const seriesForY = this.series.filter(serie => this.filterSeriesByOrientation(serie.yOrientation, yAxisOrientation.LEFT));
-  //   if(seriesForY.length === 0) {
-  //     return undefined; // to avoid ts error
-  //   }
-  //   return this.getDatapointsForDelaunay(seriesForY);
-  // }
-
-  // getDatapointsForDelaunayY1(): number[][] | undefined {
-  //   const seriesForY1 = this.series.filter(serie => serie.yOrientation === yAxisOrientation.RIGHT);
-  //   if(seriesForY1.length === 0) {
-  //     return undefined; // to avoid ts error
-  //   }
-  //   return this.getDatapointsForDelaunay(seriesForY1);
-  // }
-
-  // getAllDatapointsY(): number[][] | undefined {
-  //   const seriesForY = this.series.filter(serie => this.filterSeriesByOrientation(serie.yOrientation, yAxisOrientation.LEFT));
-  //   if(seriesForY.length === 0) {
-  //     return undefined; // to avoid ts error
-  //   }
-  //   return this.concatSeriesDatapoints(seriesForY);
-  // }
-
-  filterSeriesByOrientation(serieOrientation: yAxisOrientation, orientation: yAxisOrientation): boolean {
-    if(serieOrientation === undefined || serieOrientation === yAxisOrientation.BOTH) {
-      return true;
-    }
-    return serieOrientation === orientation;
   }
 
   concatSeriesDatapoints(series: ScatterData[]): any[][] {
