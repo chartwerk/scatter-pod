@@ -23,8 +23,7 @@
               [150, 180, 0],
               [150, 250, 1]
             ],
-            color: 'black',
-            colorFormatter: d => d[2] === 0 ? 'red' : 'green',
+            color: 'red',
             lineType: 'dashed',
             pointType: 'circle'
           },
@@ -36,9 +35,9 @@
               [150, 70, 1]
             ],
             color: 'purple',
-            colorFormatter: d => d[2] === 0 ? 'red' : 'green',
             pointType: 'rectangle',
-            pointSize: 11,
+            pointSize: 5,
+            yOrientation: 'right',
           }
         ],
         {
@@ -50,6 +49,10 @@
             y: {
               invert: true,
               range: [-100, 250]
+            },
+            y1: {
+              isActive: true,
+              range: [0, 250]
             }
           },
           zoomEvents: {

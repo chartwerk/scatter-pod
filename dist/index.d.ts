@@ -1,37 +1,22 @@
 import { ChartwerkPod, TickOrientation, TimeFormat, yAxisOrientation } from '@chartwerk/core';
-import { ScatterData, ScatterOptions, PointType, LineType, ColorFormatter } from './types';
+import { ScatterData, ScatterOptions, PointType, LineType } from './types';
+import { DelaunayDiagram } from './delaunay';
 import * as d3 from 'd3';
 export declare class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOptions> {
     _metricsContainer: any;
-    _voronoiDiagramY: any;
-    _voronoiDiagramY1: any;
-    _voronoiRadius: number;
+    _delaunayDiagram: DelaunayDiagram;
     constructor(el: HTMLElement, _series?: ScatterData[], _options?: ScatterOptions);
     renderMetrics(): void;
-    protected get minWH(): number;
-    protected renderClipPath(): void;
-    protected renderCircleGrid(): void;
-    protected moveAxesToCenter(): void;
-    rescaleMetricAndAxis(event: d3.D3ZoomEvent<any, any>): void;
-    protected renderXAxis(): void;
+    renderMetricContainer(): void;
     protected updateCrosshair(): void;
     appendCrosshairPoints(): void;
     protected appendCrosshairPoint(serieIdx: number): void;
-    protected renderMetric(datapoints: number[][], metricOptions: {
-        color: string;
-        colorFormatter: ColorFormatter;
-        target: string;
-        pointType: PointType;
-        lineType: LineType;
-        pointSize: number;
-        orientation: yAxisOrientation;
-    }): void;
+    protected renderLines(): void;
     renderLine(datapoints: number[][], lineType: LineType, color: string, orientation: yAxisOrientation): void;
-    protected renderPoints(datapoints: number[][], pointType: PointType, pointSize: number, color: string | ColorFormatter, orientation: yAxisOrientation): void;
-    protected voronoiDiagramInit(): void;
+    protected renderPoints(): void;
     onPanningEnd(): void;
     unhighlight(): void;
-    highlight(datapoint: number[]): void;
+    highlight(pointIdx: number): void;
     protected getCrosshairCircleBackgroundSize(serieIdx: number): number;
     renderSharedCrosshair(values: {
         x?: number;
@@ -39,21 +24,14 @@ export declare class ChartwerkScatterPod extends ChartwerkPod<ScatterData, Scatt
     }): void;
     moveCrosshairLine(xPosition: number, yPosition: number): void;
     findAndHighlightDatapoints(eventX: number, eventY: number): {
-        value: [number, number];
-        color: string;
-        label: string;
-    }[] | null;
+        values: any[];
+        pointIdx: number;
+    } | null;
     protected getYScale(orientation: yAxisOrientation): d3.ScaleLinear<number, number>;
     hideSharedCrosshair(): void;
     onMouseMove(): void;
-    findItemsByVoronoi(eventX: any, eventY: any): any | undefined;
     onMouseOver(): void;
     onMouseOut(): void;
-    getAllDatapointsY(): number[][] | undefined;
-    filterSeriesByOrientation(serieOrientation: yAxisOrientation, orientation: yAxisOrientation): boolean;
-    getAllDatapointsY1(): number[][] | undefined;
-    concatSeriesDatapoints(series: ScatterData[]): number[][];
-    getSerieIdxByTarget(target: string): number;
 }
 export declare const VueChartwerkScatterPodObject: {
     render(createElement: any): any;
