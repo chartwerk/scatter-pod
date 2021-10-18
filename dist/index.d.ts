@@ -8,7 +8,6 @@ export declare class ChartwerkScatterPod extends ChartwerkPod<ScatterData, Scatt
     constructor(el: HTMLElement, _series?: ScatterData[], _options?: ScatterOptions);
     renderMetrics(): void;
     renderMetricConatiner(): void;
-    rescaleMetricAndAxis(event: d3.D3ZoomEvent<any, any>): void;
     protected updateCrosshair(): void;
     appendCrosshairPoints(): void;
     protected appendCrosshairPoint(serieIdx: number): void;

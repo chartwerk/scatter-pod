@@ -48,25 +48,6 @@ export class ChartwerkScatterPod extends ChartwerkPod<ScatterData, ScatterOption
       .attr('class', ' metrics-rect');
   }
 
-  public rescaleMetricAndAxis(event: d3.D3ZoomEvent<any, any>): void {
-    // TODO: this method is overwrite super. remove duplicates
-    this.isPanning = true;
-    this.onMouseOut();
-
-    this.onPanningRescale(event);
-
-    const shouldClearState = false;
-    this.clearScaleCache(shouldClearState);
-    this.renderYAxis();
-    this.renderXAxis();
-
-    this.chartContainer.select('.metrics-rect')
-      .attr('transform', `translate(${this.state.transform.x},${this.state.transform.y}), scale(${this.state.transform.k})`);
-    // TODO: move metric-rect to core. Now it is in Pod
-    this.chartContainer.selectAll('.metric-el')
-      .attr('transform', `translate(${this.state.transform.x},${this.state.transform.y}), scale(${this.state.transform.k})`);
-  }
-
   protected updateCrosshair(): void {
     // TODO: Crosshair class, which can be used as Pod
     this.appendCrosshairPoints();
